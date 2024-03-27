@@ -185,6 +185,7 @@ def generate_game_state(x_source, y_source, starts):   # [(x, y, direction)]
 
 
         chosen_direction = random.choice(opened_gates)
+        
         if not tile.is_source:
             tile.set_gate(chosen_direction)
         else:
@@ -225,9 +226,12 @@ def generate_game_state(x_source, y_source, starts):   # [(x, y, direction)]
             num_leak, num_no_water, num_wall, num_invalid_deadend = tile.rotate_right(src, all_tiles) 
 
 
-    print(f'-------------------{num_leak}--------------{num_no_water}---------------{num_wall}---------{num_invalid_deadend}-------')
+    print(f'-------------------{num_leak}--------------{num_no_water}---------------{num_wall}---------{num_invalid_deadend}----------')
     for ele in all_tiles:
-        print(f'ele: {ele.x} {ele.y} {ele.directions} {ele.is_water}') 
+        print(f'ele: {ele.x} {ele.y} {ele.directions} {ele.is_water} {ele.is_source}') 
+
+    
+    return num_leak, num_no_water, num_wall, num_invalid_deadend, all_tiles
         
     
 
@@ -241,7 +245,7 @@ def algo(all_tiles, num_opened_head_, num_no_water_, num_wall_, num_invalid_dead
 
     while not reach_goal(chosen_state):
         
-
+        print(f'Check: {chosen_state[1]}')
 
         # Loop through all possible right states
         for i, _ in enumerate(chosen_state[0]):
@@ -282,7 +286,8 @@ def algo(all_tiles, num_opened_head_, num_no_water_, num_wall_, num_invalid_dead
                 curr_max = fn
                 chosen_state = state
         
-        checking_states.remove(chosen_state)
+        if len(checking_states) != 0:
+            checking_states.remove(chosen_state)
         visited.append(chosen_state)
 
 
@@ -319,7 +324,7 @@ def is_visited(state, visited):
 
 def is_equal_tiles(tile1, tile2):
     if tile1.x == tile2.x and tile1.y == tile2.y and len(tile1.directions) == len(tile2.directions) and tile1.is_water == tile2.is_water:
-        for key, val in tile1.directions:
+        for key, val in tile1.directions.items():
             if key not in tile2.directions or tile2.directions[key] != val:
                 return False
     else:
@@ -358,7 +363,28 @@ def get_tile_index(x, y, stack):
 
 
 def main():
-    generate_game_state(1, 1, [UP, DOWN, RIGHT])
+    num_opened_head, num_no_water, num_wall, num_invalid_deadend, all_tiles = 1, None, None, None, None
+
+    while num_opened_head % 2 == 1:
+        print('try')
+        x = random.randrange(1, GRID_SIZE - 1)
+        y = random.randrange(1, GRID_SIZE - 1)
+        head = random.randrange(2, 4)
+        directions = []
+        direction_choices = [UP, DOWN, LEFT, RIGHT]
+
+        for _ in range(head):
+            direction = random.choice(direction_choices)
+            directions.append(direction)
+            direction_choices.pop(random.randrange(len(direction_choices)))
+
+        num_opened_head, num_no_water, num_wall, num_invalid_deadend, all_tiles = generate_game_state(x, y, directions)
+
+    # instructions = algo(all_tiles=all_tiles, num_opened_head_=num_opened_head, num_no_water_=num_no_water, num_wall_=num_wall, num_invalid_deadend_=num_invalid_deadend)
+
+    print("Success !!")
+    # for instruction in instructions:
+        # pass
 
 
 if __name__ == '__main__':
