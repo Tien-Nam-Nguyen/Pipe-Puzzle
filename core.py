@@ -1,11 +1,12 @@
 import random
+import time
 
 UP = 0
 RIGHT = 1
 DOWN = 2
 LEFT = 3
 
-GRID_SIZE = 4
+GRID_SIZE = 5
 
 class Tile:
 
@@ -13,6 +14,7 @@ class Tile:
         self.is_water = is_water
         self.is_source = is_source
         self.gate = 4
+        self.watered_from = None
         
         self.directions = {}
         self.x = x
@@ -62,12 +64,14 @@ def flow(start, all_tiles):
     num_non_leak = 0
     num_water = 0
     num_invalid_deadend = 0
+    num_loop = 0
 
     # Reset board state
     for tile in all_tiles:
         tile.is_water = False
         for key in tile.directions:
             tile.directions[key] = False    
+            tile.watered_from = None
             num_head += 1
         
         if UP in tile.directions and tile.x == 0: 
@@ -131,14 +135,18 @@ def flow(start, all_tiles):
 
             if idx != -1 and (direction + 2) % 4 in all_tiles[idx].directions and all_tiles[idx] not in visited:
                 all_tiles[idx].is_water = True
+                all_tiles[idx].watered_from = (tile.x, tile.y)
                 queue.append(all_tiles[idx])
             
+            if idx != -1 and (direction + 2) % 4 in all_tiles[idx].directions and all_tiles[idx] in visited and \
+                (all_tiles[idx].x != tile.watered_from[0] or all_tiles[idx].y != tile.watered_from[1]):
+                num_loop += 1
 
         num_water += 1
 
 
     all_tiles[0].is_water = True
-    return num_head - num_non_leak, GRID_SIZE**2 - num_water, num_wall, num_invalid_deadend
+    return num_head - num_non_leak, GRID_SIZE**2 - num_water, num_wall, num_invalid_deadend, num_loop
 
 
 
@@ -154,7 +162,10 @@ def generate_game_state(x_source, y_source, starts):   # [(x, y, direction)]
     src_opened_gate = [way for way in src.directions]
 
     while len(stack) != 0:
-        tile = random.choice(stack)
+        if len(src_opened_gate) > 0:
+            tile = src
+        else:
+            tile = random.choice(stack)
 
         opened_gates = []
     
@@ -214,7 +225,7 @@ def generate_game_state(x_source, y_source, starts):   # [(x, y, direction)]
     
 
     # Random rotate and fill water
-    num_leak, num_no_water, num_wall = 0, 0, 0
+    num_leak, num_no_water, num_wall, num_invalid_deadend, num_loop = 0, 0, 0, 0, 0
 
     for tile in all_tiles:
         if tile.is_source:
@@ -223,7 +234,7 @@ def generate_game_state(x_source, y_source, starts):   # [(x, y, direction)]
         rotate_time = random.randrange(4)
 
         for i in range(rotate_time):
-            num_leak, num_no_water, num_wall, num_invalid_deadend = tile.rotate_right(src, all_tiles) 
+            num_leak, num_no_water, num_wall, num_invalid_deadend, num_loop = tile.rotate_right(src, all_tiles) 
 
 
     print(f'-------------------{num_leak}--------------{num_no_water}---------------{num_wall}---------{num_invalid_deadend}----------')
@@ -231,21 +242,20 @@ def generate_game_state(x_source, y_source, starts):   # [(x, y, direction)]
         print(f'ele: {ele.x} {ele.y} {ele.directions} {ele.is_water} {ele.is_source}') 
 
     
-    return num_leak, num_no_water, num_wall, num_invalid_deadend, all_tiles
+    return num_leak, num_no_water, num_wall, num_invalid_deadend, num_loop, all_tiles
         
     
 
 
-def algo(all_tiles, num_opened_head_, num_no_water_, num_wall_, num_invalid_deadend_):
+def algo(all_tiles, num_opened_head_, num_no_water_, num_wall_, num_invalid_deadend_, num_loop_):
     # 
     visited = []
     checking_states = []        # [(state, hn, instructions, gn)]
-    hn = num_opened_head_ / 2 + num_no_water_ + num_wall_ * 4 + num_invalid_deadend_ * 2 
+    hn = num_opened_head_ / 2 + num_no_water_ + num_wall_ * 5 + num_invalid_deadend_ * 5 + num_loop_ * 3
     chosen_state = (all_tiles, hn, [], 0)
 
     while not reach_goal(chosen_state):
         
-        print(f'Check: {chosen_state[1]}')
 
         # Loop through all possible right states
         for i, _ in enumerate(chosen_state[0]):
@@ -253,8 +263,8 @@ def algo(all_tiles, num_opened_head_, num_no_water_, num_wall_, num_invalid_dead
             right_lst = list_copy(chosen_state[0])
             src = right_lst[0]
             # Rotate right state
-            num_opened_head, num_no_water, num_wall, num_invalid_deadend = right_lst[i].rotate_right(src, right_lst)
-            hn = num_opened_head / 2 + num_no_water + num_wall * 4 + num_invalid_deadend * 2 
+            num_opened_head, num_no_water, num_wall, num_invalid_deadend, num_loop = right_lst[i].rotate_right(src, right_lst)
+            hn = num_opened_head / 2 + num_no_water  + num_wall * 5 + num_invalid_deadend * 5 + num_loop * 3
             gn = chosen_state[3] + 1            # chosen_state[3]: previous gn
             instructions = chosen_state[2].copy()
             instructions.append((right_lst[i].x, right_lst[i].y, 'right'))
@@ -267,8 +277,8 @@ def algo(all_tiles, num_opened_head_, num_no_water_, num_wall_, num_invalid_dead
             left_lst = list_copy(chosen_state[0])
             src = left_lst[0]
             # Rotate left state
-            num_opened_head, num_no_water, num_wall, num_invalid_deadend = left_lst[i].rotate_left(src, left_lst)
-            hn = num_opened_head / 2 + num_no_water + num_wall * 4 + num_invalid_deadend * 2 
+            num_opened_head, num_no_water, num_wall, num_invalid_deadend, num_loop = left_lst[i].rotate_left(src, left_lst)
+            hn = num_opened_head / 2 + num_no_water + num_wall * 5 + num_invalid_deadend * 5 + num_loop * 3
             gn = chosen_state[3] + 1
             instructions = chosen_state[2].copy()
             instructions.append((left_lst[i].x, left_lst[i].y, 'left'))
@@ -278,20 +288,41 @@ def algo(all_tiles, num_opened_head_, num_no_water_, num_wall_, num_invalid_dead
                 checking_states.append((left_lst, hn, instructions, gn))
 
             
-        curr_max = -1
+            double_lst = list_copy(chosen_state[0])
+            src = double_lst[0]
+            # Rotate left state
+            num_opened_head, num_no_water, num_wall, num_invalid_deadend, num_loop = double_lst[i].rotate_left(src, double_lst)
+            src = double_lst[0]
+            num_opened_head, num_no_water, num_wall, num_invalid_deadend, num_loop = double_lst[i].rotate_left(src, double_lst)
+            hn = num_opened_head / 2 + num_no_water + num_wall * 5 + num_invalid_deadend * 5 + num_loop * 3
+            gn = chosen_state[3] + 1
+            instructions = chosen_state[2].copy()
+            instructions.append((double_lst[i].x, double_lst[i].y, 'left left'))
+
+    
+            if not is_visited((double_lst, hn, instructions, gn), visited):
+                checking_states.append((double_lst, hn, instructions, gn))
+    
+    
+        curr_min = 1_000_000
+        # print(f'Check: {chosen_state[1]} {len(checking_states)}')
 
         for state in checking_states:
             fn = state[1] + state[3]
-            if fn > curr_max:
-                curr_max = fn
+            if fn <= curr_min:
+                curr_min = fn
                 chosen_state = state
         
         if len(checking_states) != 0:
             checking_states.remove(chosen_state)
+            
         visited.append(chosen_state)
+        
+        if len(checking_states) == 0:
+            break
+        
 
-
-    return chosen_state[2]            # return a list of instructions to get to the goal state
+    return chosen_state[2], len(checking_states) + len(visited)            # return a list of instructions to get to the goal state
         
 
 
@@ -312,12 +343,16 @@ def create_tile_copy(tile):
 
 def is_visited(state, visited):
     # state = (tiles, hn, instruction, gn)
-    # visite = [(tiles, hn, instruction, gn)]
+    # visited = [(tiles, hn, instruction, gn)]
     
     for visited_tiles, _, _, _ in visited:
+        count = 0
         for visited_tile, tile in zip(visited_tiles, state[0]):
             if is_equal_tiles(visited_tile, tile):
-                return True
+                count += 1
+
+        if count == len(state[0]):
+            return True
             
     return False
     
@@ -363,7 +398,7 @@ def get_tile_index(x, y, stack):
 
 
 def main():
-    num_opened_head, num_no_water, num_wall, num_invalid_deadend, all_tiles = 1, None, None, None, None
+    num_opened_head, num_no_water, num_wall, num_invalid_deadend, num_loop, all_tiles = 1, None, None, None, None, None
 
     while num_opened_head % 2 == 1:
         print('try')
@@ -376,15 +411,18 @@ def main():
         for _ in range(head):
             direction = random.choice(direction_choices)
             directions.append(direction)
-            direction_choices.pop(random.randrange(len(direction_choices)))
+            direction_choices.remove(direction)
 
-        num_opened_head, num_no_water, num_wall, num_invalid_deadend, all_tiles = generate_game_state(x, y, directions)
+        num_opened_head, num_no_water, num_wall, num_invalid_deadend, num_loop, all_tiles = generate_game_state(x, y, directions)
 
-    # instructions = algo(all_tiles=all_tiles, num_opened_head_=num_opened_head, num_no_water_=num_no_water, num_wall_=num_wall, num_invalid_deadend_=num_invalid_deadend)
 
-    print("Success !!")
-    # for instruction in instructions:
-        # pass
+    
+    start_time = time.time()
+    instructions, num_state = algo(all_tiles=all_tiles, num_opened_head_=num_opened_head, num_no_water_=num_no_water, num_wall_=num_wall, num_invalid_deadend_=num_invalid_deadend, num_loop_=num_loop)
+
+    print(f"Success !! Algorith run in {time.time() - start_time} seconds with {num_state} states")
+    for instruction in instructions:
+        print(f'do {instruction[0]}  {instruction[1]}  {instruction[2]}')
 
 
 if __name__ == '__main__':
