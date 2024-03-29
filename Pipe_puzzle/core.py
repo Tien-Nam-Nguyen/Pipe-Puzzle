@@ -455,7 +455,9 @@ def get_tile_index(x, y, stack):
 
 
 
-def init_and_get_solution():
+def init_and_get_solution(grid_size):
+    global GRID_SIZE
+    GRID_SIZE = grid_size
     num_opened_head, num_no_water, num_wall, num_invalid_deadend, num_loop, all_tiles = 1, None, None, None, None, None
 
     while num_opened_head % 2 == 1:
@@ -477,12 +479,12 @@ def init_and_get_solution():
     
     start_time = time.time()
     instructions, num_state = algo(all_tiles=all_tiles, num_opened_head_=num_opened_head, num_no_water_=num_no_water, num_wall_=num_wall, num_invalid_deadend_=num_invalid_deadend, num_loop_=num_loop)
-
-    print(f"A* Success !! Algorith run in {time.time() - start_time} seconds with {num_state} states")
+    total_time = time.time() - start_time
+    print(f"A* Success !! Algorith run in {total_time} seconds with {num_state} states")
     for instruction in instructions:
         print(f'do {instruction[0]}  {instruction[1]}  {instruction[2]}')
     
-    return all_tiles, instructions, num_state
+    return all_tiles, instructions, num_state, total_time
     
     # start_time = time.time()
     # instructions, num_state = blind_search(all_tiles=all_tiles)

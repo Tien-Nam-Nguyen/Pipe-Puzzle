@@ -1,6 +1,6 @@
 import pygame
-import os
-import random
+from core import init_and_get_solution
+from game_utils import create_grid
 
 # Khởi tạo Pygame
 pygame.init()
@@ -22,8 +22,7 @@ GREEN = (0, 255, 0)
 GRAY = (200, 200, 200)
 BLUE = (0, 0, 255)
 
-# Đường dẫn đến thư mục chứa ảnh
-IMAGE_FOLDER = "images"
+
 
 # Khởi tạo cửa sổ game
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -32,29 +31,10 @@ pygame.display.set_caption("Grid Game")
 clock = pygame.time.Clock()
 
 # Hàm tạo grid với các bức ảnh từ thư mục
-def create_grid(grid_size):
-    grid = []
-    image_paths = get_image_paths()
-    for _ in range(grid_size):
-        row = []
-        for _ in range(grid_size):
-            # Chọn một bức ảnh ngẫu nhiên từ thư mục
-            image_path = random.choice(image_paths)
-            image = pygame.image.load(image_path)
-            image = pygame.transform.scale(image, (CELL_SIZE, CELL_SIZE))
-            row.append(image)
-        grid.append(row)
-    return grid
+
+
 
 # Hàm lấy danh sách đường dẫn đến các ảnh trong thư mục
-def get_image_paths():
-    image_paths = []
-    for filename in os.listdir(IMAGE_FOLDER):
-        if filename.endswith(".jpg") or filename.endswith(".png"):
-            image_path = os.path.join(IMAGE_FOLDER, filename)
-            image_paths.append(image_path)
-    return image_paths
-
 # Hàm vẽ grid lên màn hình
 def draw_grid(grid):
     screen.fill(WHITE)
@@ -103,13 +83,29 @@ def draw_solve_button():
 # Hàm chính
 def main():
     grid_size = DEFAULT_GRID_SIZE
-    grid = create_grid(grid_size)
+    grid, instructions, num_state, total_time = create_grid(grid_size)
 
+    instruction_x, instruction_y, instruction_cmd = None, None, None
+    instructions_idx = 0
+    solving = False
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
+            if solving:
+                if instruction_cmd == 'left':
+                    pass
+                
+                elif instruction_cmd == 'right':
+                    pass
+
+                else:
+                    pass
+                
+                continue
+
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == pygame.BUTTON_LEFT or event.button == pygame.BUTTON_RIGHT:
@@ -130,13 +126,15 @@ def main():
                     # Kiểm tra xem người chơi đã nhấp chuột vào nút "New Game 4x4"
                     if button_4x4.collidepoint(event.pos):
                         grid_size = GRID_SIZE_4x4
-                        grid = create_grid(grid_size)
+                        grid, instructions, num_state, total_time = create_grid(grid_size)
                     # Kiểm tra xem người chơi đã nhấp chuột vào nút "New Game 5x5"
                     elif button_5x5.collidepoint(event.pos):
                         grid_size = GRID_SIZE_5x5
-                        grid = create_grid(grid_size)
+                        grid, instructions, num_state, total_time = create_grid(grid_size)
                     
                     elif button_solve.collidepoint(event.pos):
+                        solving = True
+                        instruction_x, instruction_y, instruction_cmd = instructions[instructions_idx]
                         print('Solve button is clicked')
 
         draw_grid(grid)
