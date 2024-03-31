@@ -82,6 +82,8 @@ def draw_solve_button():
 
 # Hàm chính
 def main():
+    rotate_solving_event = pygame.USEREVENT + 1
+    pygame.time.set_timer(rotate_solving_event, 1000)
     grid_size = DEFAULT_GRID_SIZE
     grid, instructions, num_state, total_time = create_grid(grid_size)
 
@@ -94,16 +96,24 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-            if solving:
+            if solving and event.type == rotate_solving_event:
                 if instruction_cmd == 'left':
-                    pass
+                    grid[instruction_x][instruction_y] = pygame.transform.rotate(grid[instruction_x][instruction_y], 90)
                 
                 elif instruction_cmd == 'right':
-                    pass
+                    grid[instruction_x][instruction_y] = pygame.transform.rotate(grid[instruction_x][instruction_y], -90)
 
                 else:
-                    pass
+                    grid[instruction_x][instruction_y] = pygame.transform.rotate(grid[instruction_x][instruction_y], 180)
                 
+                instructions_idx += 1
+                if instructions_idx < len(instructions):
+                    instruction_x, instruction_y, instruction_cmd = instructions[instructions_idx]
+                else:
+                    solving = False
+                    print('Finish solving')
+                    instructions_idx = 0
+                    
                 continue
 
 
@@ -135,7 +145,7 @@ def main():
                     elif button_solve.collidepoint(event.pos):
                         solving = True
                         instruction_x, instruction_y, instruction_cmd = instructions[instructions_idx]
-                        print('Solve button is clicked')
+                        # instructions_idx += 1
 
         draw_grid(grid)
         button_4x4, button_5x5 = draw_new_game_buttons()

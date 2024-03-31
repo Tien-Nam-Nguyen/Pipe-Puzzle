@@ -52,9 +52,9 @@ def create_grid(grid_size):
                 img = image_dict['down']
             
             elif UP in tile.directions and tile.is_water:
-                img = image_dict['up']
-            elif UP in tile.directions and not tile.is_water:
                 img = image_dict['up_water']
+            elif UP in tile.directions and not tile.is_water:
+                img = image_dict['up']
 
 
         elif len(tile.directions) == 2 and (list(tile.directions.keys())[0] + 2) % 4 in tile.directions:
@@ -111,6 +111,8 @@ def create_grid(grid_size):
             elif LEFT in tile.directions and RIGHT in tile.directions and DOWN in tile.directions and not tile.is_water:
                 img = image_dict['left_right_down']
 
+        grid[x_grid][y_grid] = img
+        
     return grid, instructions, num_state, total_time
 
 
