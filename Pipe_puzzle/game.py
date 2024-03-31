@@ -1,6 +1,6 @@
 import pygame
-from core import init_and_get_solution
-from game_utils import create_grid
+from core import get_tile_index
+from game_utils import create_grid, update_grid
 
 # Khởi tạo Pygame
 pygame.init()
@@ -21,6 +21,8 @@ WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 GRAY = (200, 200, 200)
 BLUE = (0, 0, 255)
+RED = (255, 0, 0)
+BLACK = (0, 0, 0)
 
 
 
@@ -80,12 +82,40 @@ def draw_solve_button():
     return button_solve
 
 
+def draw_num_state(num_state=0):
+    font = pygame.font.SysFont('Georgia', 22, bold=True)
+    text = font.render(f'Number of stored states: {num_state}', True, BLACK)
+    text_rect = text.get_rect()
+    text_rect.center = (SCREEN_WIDTH - 200, 300)
+    screen.blit(text, text_rect)
+    return text_rect
+
+
+def draw_total_time(total_time=0):
+    font = pygame.font.SysFont('Georgia', 22, bold=True)
+    text = font.render(f'Total time: {round(total_time, 3)} seconds', True, BLACK)
+    text_rect = text.get_rect()
+    text_rect.center = (SCREEN_WIDTH - 200, 400)
+    screen.blit(text, text_rect)
+    return text_rect
+
+
+def draw_source(x, y):
+    circle_radius = 22
+    x = x * (CELL_SIZE + CELL_PADDING) + CELL_PADDING // 2 + CELL_SIZE // 2
+    y = y * (CELL_SIZE + CELL_PADDING) + CELL_PADDING // 2 + CELL_SIZE // 2
+    circle_center = (y, x)
+    pygame.draw.circle(screen, RED, circle_center, circle_radius)
+
+
 # Hàm chính
 def main():
     rotate_solving_event = pygame.USEREVENT + 1
     pygame.time.set_timer(rotate_solving_event, 1000)
     grid_size = DEFAULT_GRID_SIZE
-    grid, instructions, num_state, total_time = create_grid(grid_size)
+    grid, instructions, num_state, total_time, all_tiles, image_dict = create_grid(grid_size)
+    src = all_tiles[0]
+    print(f'soucec : {src.x} {src.y}')
 
     instruction_x, instruction_y, instruction_cmd = None, None, None
     instructions_idx = 0
@@ -97,14 +127,20 @@ def main():
                 running = False
 
             if solving and event.type == rotate_solving_event:
+                idx = get_tile_index(instruction_x, instruction_y, all_tiles)
                 if instruction_cmd == 'left':
-                    grid[instruction_x][instruction_y] = pygame.transform.rotate(grid[instruction_x][instruction_y], 90)
+                    # actually rotate in logic and update visually tile by tile
+                    all_tiles[idx].rotate_left(src, all_tiles)
+                    grid, all_tiles = update_grid(grid, image_dict, all_tiles)
                 
                 elif instruction_cmd == 'right':
-                    grid[instruction_x][instruction_y] = pygame.transform.rotate(grid[instruction_x][instruction_y], -90)
+                    all_tiles[idx].rotate_right(src, all_tiles)
+                    grid, all_tiles = update_grid(grid, image_dict, all_tiles)
 
                 else:
-                    grid[instruction_x][instruction_y] = pygame.transform.rotate(grid[instruction_x][instruction_y], 180)
+                    all_tiles[idx].rotate_left(src, all_tiles)
+                    all_tiles[idx].rotate_left(src, all_tiles)
+                    grid, all_tiles = update_grid(grid, image_dict, all_tiles)
                 
                 instructions_idx += 1
                 if instructions_idx < len(instructions):
@@ -136,12 +172,14 @@ def main():
                     # Kiểm tra xem người chơi đã nhấp chuột vào nút "New Game 4x4"
                     if button_4x4.collidepoint(event.pos):
                         grid_size = GRID_SIZE_4x4
-                        grid, instructions, num_state, total_time = create_grid(grid_size)
+                        grid, instructions, num_state, total_time, all_tiles, image_dict = create_grid(grid_size)
+                        src = all_tiles[0]
                     # Kiểm tra xem người chơi đã nhấp chuột vào nút "New Game 5x5"
                     elif button_5x5.collidepoint(event.pos):
                         grid_size = GRID_SIZE_5x5
-                        grid, instructions, num_state, total_time = create_grid(grid_size)
-                    
+                        grid, instructions, num_state, total_time, all_tiles, image_dict = create_grid(grid_size)
+                        src = all_tiles[0]
+
                     elif button_solve.collidepoint(event.pos):
                         solving = True
                         instruction_x, instruction_y, instruction_cmd = instructions[instructions_idx]
@@ -150,6 +188,9 @@ def main():
         draw_grid(grid)
         button_4x4, button_5x5 = draw_new_game_buttons()
         button_solve = draw_solve_button()
+        num_state_rect = draw_num_state(num_state)
+        total_time_rect = draw_total_time(total_time)
+        draw_source(src.x, src.y)
         pygame.display.update()
         clock.tick(60)
 

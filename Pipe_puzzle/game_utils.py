@@ -29,7 +29,89 @@ def create_grid(grid_size):
 
 
     all_tiles, instructions, num_state, total_time = init_and_get_solution(grid_size)
+    grid, all_tiles = update_grid(grid, image_dict, all_tiles)
 
+        
+    return grid, instructions, num_state, total_time, all_tiles, image_dict
+
+
+def get_image_dict():
+    image_paths = {}
+    for filename in os.listdir(IMAGE_FOLDER):
+        if filename.endswith(".jpg") or filename.endswith(".png"):
+            image_path = os.path.join(IMAGE_FOLDER, filename)
+            image = pygame.image.load(image_path)
+            image = pygame.transform.scale(image, (CELL_SIZE, CELL_SIZE))
+
+            if filename.startswith('type1-water'):
+                image_paths['right_water'] = image
+            
+            elif filename.startswith('type1'):
+                image_paths['right'] = image
+
+            elif filename.startswith('type2-water'):
+                image_paths['left_right_water'] = image
+
+            elif filename.startswith('type2'):
+                image_paths['left_right'] = image
+
+            elif filename.startswith('type3-water'):
+                image_paths['down_right_water'] = image
+            
+            elif filename.startswith('type3'):
+                image_paths['down_right'] = image
+
+            elif filename.startswith('type4-water'):
+                image_paths['up_down_right_water'] = image
+
+            elif filename.startswith('type4'):
+                image_paths['up_down_right'] = image
+
+    # -90 theo chieu kim dong ho, 90 nguoc chieu kim dong ho
+    CLOCKWISE, ANTI_CLOCKWISE = -90, 90
+
+    right_water_base = image_paths['right_water']
+    right_base = image_paths['right']
+    left_right_water_base = image_paths['left_right_water']
+    left_right_base = image_paths['left_right']
+    down_right_water_base = image_paths['down_right_water']
+    down_right_base = image_paths['down_right']
+    up_down_right_water_base = image_paths['up_down_right_water']
+    up_down_right_base = image_paths['up_down_right']
+
+
+    # set deadend images
+    image_paths['left_water'] = pygame.transform.rotate(right_water_base, 180)
+    image_paths['left'] = pygame.transform.rotate(right_base, 180)
+    image_paths['up_water'] = pygame.transform.rotate(right_water_base, ANTI_CLOCKWISE)
+    image_paths['up'] = pygame.transform.rotate(right_base, ANTI_CLOCKWISE)
+    image_paths['down_water'] = pygame.transform.rotate(right_water_base, CLOCKWISE)
+    image_paths['down'] = pygame.transform.rotate(right_base, CLOCKWISE)
+
+    # set straight pipe images
+    image_paths['up_down_water'] = pygame.transform.rotate(left_right_water_base, CLOCKWISE)
+    image_paths['up_down'] = pygame.transform.rotate(left_right_base, CLOCKWISE)
+
+    # set L shape images
+    image_paths['down_left_water'] = pygame.transform.rotate(down_right_water_base, CLOCKWISE)
+    image_paths['down_left'] = pygame.transform.rotate(down_right_base, CLOCKWISE)
+    image_paths['up_left_water'] = pygame.transform.rotate(down_right_water_base, 180)
+    image_paths['up_left'] = pygame.transform.rotate(down_right_base, 180)
+    image_paths['up_right_water'] = pygame.transform.rotate(down_right_water_base, ANTI_CLOCKWISE)
+    image_paths['up_right'] = pygame.transform.rotate(down_right_base, ANTI_CLOCKWISE)
+
+    #set T shape images
+    image_paths['up_down_left_water'] = pygame.transform.rotate(up_down_right_water_base, 180)
+    image_paths['up_down_left'] = pygame.transform.rotate(up_down_right_base, 180)
+    image_paths['left_right_up_water'] = pygame.transform.rotate(up_down_right_water_base, ANTI_CLOCKWISE)
+    image_paths['left_right_up'] = pygame.transform.rotate(up_down_right_base, ANTI_CLOCKWISE)
+    image_paths['left_right_down_water'] = pygame.transform.rotate(up_down_right_water_base, CLOCKWISE)
+    image_paths['left_right_down'] = pygame.transform.rotate(up_down_right_base, CLOCKWISE)
+
+    return image_paths
+
+
+def update_grid(grid, image_dict, all_tiles):
     for tile in all_tiles:
         x_grid = tile.x
         y_grid = tile.y
@@ -112,81 +194,5 @@ def create_grid(grid_size):
                 img = image_dict['left_right_down']
 
         grid[x_grid][y_grid] = img
-        
-    return grid, instructions, num_state, total_time
 
-
-def get_image_dict():
-    image_paths = {}
-    for filename in os.listdir(IMAGE_FOLDER):
-        if filename.endswith(".jpg") or filename.endswith(".png"):
-            image_path = os.path.join(IMAGE_FOLDER, filename)
-            image = pygame.image.load(image_path)
-            image = pygame.transform.scale(image, (CELL_SIZE, CELL_SIZE))
-
-            if filename.startswith('type1-water'):
-                image_paths['right_water'] = image
-            
-            elif filename.startswith('type1'):
-                image_paths['right'] = image
-
-            elif filename.startswith('type2-water'):
-                image_paths['left_right_water'] = image
-
-            elif filename.startswith('type2'):
-                image_paths['left_right'] = image
-
-            elif filename.startswith('type3-water'):
-                image_paths['down_right_water'] = image
-            
-            elif filename.startswith('type3'):
-                image_paths['down_right'] = image
-
-            elif filename.startswith('type4-water'):
-                image_paths['up_down_right_water'] = image
-
-            elif filename.startswith('type4'):
-                image_paths['up_down_right'] = image
-
-    # -90 theo chieu kim dong ho, 90 nguoc chieu kim dong ho
-    CLOCKWISE, ANTI_CLOCKWISE = -90, 90
-
-    right_water_base = image_paths['right_water']
-    right_base = image_paths['right']
-    left_right_water_base = image_paths['left_right_water']
-    left_right_base = image_paths['left_right']
-    down_right_water_base = image_paths['down_right_water']
-    down_right_base = image_paths['down_right']
-    up_down_right_water_base = image_paths['up_down_right_water']
-    up_down_right_base = image_paths['up_down_right']
-
-
-    # set deadend images
-    image_paths['left_water'] = pygame.transform.rotate(right_water_base, 180)
-    image_paths['left'] = pygame.transform.rotate(right_base, 180)
-    image_paths['up_water'] = pygame.transform.rotate(right_water_base, ANTI_CLOCKWISE)
-    image_paths['up'] = pygame.transform.rotate(right_base, ANTI_CLOCKWISE)
-    image_paths['down_water'] = pygame.transform.rotate(right_water_base, CLOCKWISE)
-    image_paths['down'] = pygame.transform.rotate(right_base, CLOCKWISE)
-
-    # set straight pipe images
-    image_paths['up_down_water'] = pygame.transform.rotate(left_right_water_base, CLOCKWISE)
-    image_paths['up_down'] = pygame.transform.rotate(left_right_base, CLOCKWISE)
-
-    # set L shape images
-    image_paths['down_left_water'] = pygame.transform.rotate(down_right_water_base, CLOCKWISE)
-    image_paths['down_left'] = pygame.transform.rotate(down_right_base, CLOCKWISE)
-    image_paths['up_left_water'] = pygame.transform.rotate(down_right_water_base, 180)
-    image_paths['up_left'] = pygame.transform.rotate(down_right_base, 180)
-    image_paths['up_right_water'] = pygame.transform.rotate(down_right_water_base, ANTI_CLOCKWISE)
-    image_paths['up_right'] = pygame.transform.rotate(down_right_base, ANTI_CLOCKWISE)
-
-    #set T shape images
-    image_paths['up_down_left_water'] = pygame.transform.rotate(up_down_right_water_base, 180)
-    image_paths['up_down_left'] = pygame.transform.rotate(up_down_right_base, 180)
-    image_paths['left_right_up_water'] = pygame.transform.rotate(up_down_right_water_base, ANTI_CLOCKWISE)
-    image_paths['left_right_up'] = pygame.transform.rotate(up_down_right_base, ANTI_CLOCKWISE)
-    image_paths['left_right_down_water'] = pygame.transform.rotate(up_down_right_water_base, CLOCKWISE)
-    image_paths['left_right_down'] = pygame.transform.rotate(up_down_right_base, CLOCKWISE)
-
-    return image_paths
+    return grid, all_tiles
