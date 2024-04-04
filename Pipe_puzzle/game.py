@@ -1,5 +1,5 @@
 import pygame
-from core import get_tile_index
+from core import get_tile_index, blind_search
 from game_utils import create_grid, update_grid
 
 # Khởi tạo Pygame
@@ -11,6 +11,7 @@ SCREEN_HEIGHT = 600
 
 # Kích thước grid
 DEFAULT_GRID_SIZE = 5
+GRID_SIZE_3x3 = 3
 GRID_SIZE_4x4 = 4
 GRID_SIZE_5x5 = 5
 CELL_SIZE = 100
@@ -54,18 +55,31 @@ def draw_grid(grid):
 
     # pygame.display.flip()
 
+def draw_3x3_new_game_button():
+    font = pygame.font.SysFont('Georgia', 18, bold=True)
+
+    # Vẽ nút "New Game 3x3"
+    button_3x3 = pygame.Rect(SCREEN_WIDTH - 200, 50, 135, 30)
+    pygame.draw.rect(screen, BLUE, button_3x3)
+    text_3x3 = font.render("New Game 3x3", True, WHITE)
+    screen.blit(text_3x3, (button_3x3.x + 10, button_3x3.y + 5))
+
+    return button_3x3
+
+
+
 # Hàm vẽ các nút "New Game"
 def draw_new_game_buttons():
     font = pygame.font.SysFont('Georgia', 18, bold=True)
-
+    
     # Vẽ nút "New Game 4x4"
-    button_4x4 = pygame.Rect(SCREEN_WIDTH - 200, 50, 135, 30)
+    button_4x4 = pygame.Rect(SCREEN_WIDTH - 200, 110, 135, 30)
     pygame.draw.rect(screen, BLUE, button_4x4)
     text_4x4 = font.render("New Game 4x4", True, WHITE)
     screen.blit(text_4x4, (button_4x4.x + 10, button_4x4.y + 5))
 
     # Vẽ nút "New Game 5x5"
-    button_5x5 = pygame.Rect(SCREEN_WIDTH - 200, 110, 135, 30)
+    button_5x5 = pygame.Rect(SCREEN_WIDTH - 200, 170, 135, 30)
     pygame.draw.rect(screen, BLUE, button_5x5)
     text_5x5 = font.render("New Game 5x5", True, WHITE)
     screen.blit(text_5x5, (button_5x5.x + 10, button_5x5.y + 5))
@@ -73,11 +87,20 @@ def draw_new_game_buttons():
     return button_4x4, button_5x5
 
 
-def draw_solve_button():
+def draw_a_star_solve_button():
     font = pygame.font.SysFont('Georgia', 18, bold=True)
-    button_solve = pygame.Rect(SCREEN_WIDTH - 200, 170, 135, 30)
+    button_solve = pygame.Rect(SCREEN_WIDTH - 200, 230, 135, 30)
     pygame.draw.rect(screen, GREEN, button_solve)
-    text_solve = font.render("Solve", True, WHITE)
+    text_solve = font.render("A* Solve", True, WHITE)
+    screen.blit(text_solve, (button_solve.x + 10, button_solve.y + 5))
+    return button_solve
+
+
+def draw_dfs_solve_button():
+    font = pygame.font.SysFont('Georgia', 18, bold=True)
+    button_solve = pygame.Rect(SCREEN_WIDTH - 200, 290, 135, 30)
+    pygame.draw.rect(screen, GREEN, button_solve)
+    text_solve = font.render("DFS Solve", True, WHITE)
     screen.blit(text_solve, (button_solve.x + 10, button_solve.y + 5))
     return button_solve
 
@@ -86,7 +109,7 @@ def draw_num_state(num_state=0):
     font = pygame.font.SysFont('Georgia', 22, bold=True)
     text = font.render(f'Number of stored states: {num_state}', True, BLACK)
     text_rect = text.get_rect()
-    text_rect.center = (SCREEN_WIDTH - 200, 300)
+    text_rect.center = (SCREEN_WIDTH - 200, 380)
     screen.blit(text, text_rect)
     return text_rect
 
@@ -95,7 +118,7 @@ def draw_total_time(total_time=0):
     font = pygame.font.SysFont('Georgia', 22, bold=True)
     text = font.render(f'Total time: {round(total_time, 3)} seconds', True, BLACK)
     text_rect = text.get_rect()
-    text_rect.center = (SCREEN_WIDTH - 200, 400)
+    text_rect.center = (SCREEN_WIDTH - 200, 480)
     screen.blit(text, text_rect)
     return text_rect
 
@@ -110,12 +133,14 @@ def draw_source(x, y):
 
 # Hàm chính
 def main():
+    canSolveDFS = False
+    solved = False
     rotate_solving_event = pygame.USEREVENT + 1
     pygame.time.set_timer(rotate_solving_event, 1000)
     grid_size = DEFAULT_GRID_SIZE
     grid, instructions, num_state, total_time, all_tiles, image_dict = create_grid(grid_size)
     src = all_tiles[0]
-    print(f'soucec : {src.x} {src.y}')
+    print(f'source : {src.x} {src.y}')
 
     instruction_x, instruction_y, instruction_cmd = None, None, None
     instructions_idx = 0
@@ -147,6 +172,7 @@ def main():
                     instruction_x, instruction_y, instruction_cmd = instructions[instructions_idx]
                 else:
                     solving = False
+                    solved = True
                     print('Finish solving')
                     instructions_idx = 0
                     
@@ -165,7 +191,7 @@ def main():
                         rotation_angle = -90 if event.button == pygame.BUTTON_LEFT else 90
 
                         # Quay ô theo góc quay tương ứng
-                        grid[grid_y][grid_x] = pygame.transform.rotate(grid[grid_y][grid_x], rotation_angle)
+                        # grid[grid_y][grid_x] = pygame.transform.rotate(grid[grid_y][grid_x], rotation_angle)
 
             if event.type == pygame.MOUSEBUTTONUP:
                 if event.button == pygame.BUTTON_LEFT:
@@ -174,20 +200,44 @@ def main():
                         grid_size = GRID_SIZE_4x4
                         grid, instructions, num_state, total_time, all_tiles, image_dict = create_grid(grid_size)
                         src = all_tiles[0]
+                        solved = False
+
                     # Kiểm tra xem người chơi đã nhấp chuột vào nút "New Game 5x5"
                     elif button_5x5.collidepoint(event.pos):
                         grid_size = GRID_SIZE_5x5
                         grid, instructions, num_state, total_time, all_tiles, image_dict = create_grid(grid_size)
                         src = all_tiles[0]
+                        solved = False
 
-                    elif button_solve.collidepoint(event.pos):
+                    elif button_3x3.collidepoint(event.pos):
+                        grid_size = GRID_SIZE_3x3
+                        grid, instructions, num_state, total_time, all_tiles, image_dict = create_grid(grid_size, mode='dfs')
+                        src = all_tiles[0]
+                        canSolveDFS = True
+                        solved = False
+
+                    elif a_star_button_solve.collidepoint(event.pos):
                         solving = True
                         instruction_x, instruction_y, instruction_cmd = instructions[instructions_idx]
                         # instructions_idx += 1
 
+                    elif dfs_button_solve.collidepoint(event.pos):
+                        dfs_instructions, dfs_num_state = blind_search(all_tiles)
+                        num_state = dfs_num_state
+                        total_time = 'inf' 
+                        solved = False
+
+
         draw_grid(grid)
+        button_3x3 = draw_3x3_new_game_button()
         button_4x4, button_5x5 = draw_new_game_buttons()
-        button_solve = draw_solve_button()
+        
+        if not solved:
+            a_star_button_solve = draw_a_star_solve_button()
+
+        if canSolveDFS and not solved:
+            dfs_button_solve = draw_dfs_solve_button()
+
         num_state_rect = draw_num_state(num_state)
         total_time_rect = draw_total_time(total_time)
         draw_source(src.x, src.y)

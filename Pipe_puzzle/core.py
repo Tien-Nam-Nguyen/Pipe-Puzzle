@@ -6,7 +6,7 @@ RIGHT = 1
 DOWN = 2
 LEFT = 3
 
-GRID_SIZE = 3
+GRID_SIZE = 4
 
 class Tile:
 
@@ -333,7 +333,7 @@ def blind_search(all_tiles):
 
 
     while not reach_goal(chosen_state): 
-        print(f'My check: {chosen_state[1]} {len(checking_states)}') 
+        print(f'H(n): {chosen_state[1]}; Number of states: {len(checking_states) + len(visited)}') 
         for i, _ in enumerate(chosen_state[0]):
             right_lst = list_copy(chosen_state[0])
             src = right_lst[0]
@@ -455,7 +455,7 @@ def get_tile_index(x, y, stack):
 
 
 
-def init_and_get_solution(grid_size):
+def init_and_get_solution(grid_size, mode='a_star'):
     global GRID_SIZE
     GRID_SIZE = grid_size
     num_opened_head, num_no_water, num_wall, num_invalid_deadend, num_loop, all_tiles = 1, None, None, None, None, None
@@ -465,6 +465,8 @@ def init_and_get_solution(grid_size):
         x = random.randrange(1, GRID_SIZE - 1)
         y = random.randrange(1, GRID_SIZE - 1)
         head = random.randrange(2, 4)
+        if mode == 'dfs':
+            head = 3
         directions = []
         direction_choices = [UP, DOWN, LEFT, RIGHT]
 
@@ -486,14 +488,14 @@ def init_and_get_solution(grid_size):
     
     return all_tiles, instructions, num_state, total_time
     
-    # start_time = time.time()
-    # instructions, num_state = blind_search(all_tiles=all_tiles)
-    # print(f"DFS Success !! Algorith run in {time.time() - start_time} seconds with {num_state} states")
-    # for instruction in instructions:
-    #     print(f'do {instruction[0]}  {instruction[1]}  {instruction[2]}')
 
 
 
 # if __name__ == '__main__':
-#     main()
+#     start_time = time.time()
+#     all_tiles, instructions, num_state, total_time = init_and_get_solution(3, mode='dfs')
+#     instructions, num_state = blind_search(all_tiles=all_tiles)
+#     print(f"DFS Success !! Algorith run in {time.time() - start_time} seconds with {num_state} states")
+#     for instruction in instructions:
+#         print(f'do {instruction[0]}  {instruction[1]}  {instruction[2]}')
 

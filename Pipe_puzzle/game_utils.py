@@ -11,7 +11,7 @@ LEFT = 3
 CELL_SIZE = 100
 IMAGE_FOLDER = "images"
 
-def create_grid(grid_size):
+def create_grid(grid_size, mode='a_star'):
 
     grid = []
     image_dict = get_image_dict()
@@ -28,7 +28,7 @@ def create_grid(grid_size):
     
 
 
-    all_tiles, instructions, num_state, total_time = init_and_get_solution(grid_size)
+    all_tiles, instructions, num_state, total_time = init_and_get_solution(grid_size, mode=mode)
     grid, all_tiles = update_grid(grid, image_dict, all_tiles)
 
         
