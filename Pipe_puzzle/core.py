@@ -150,7 +150,7 @@ def flow(start, all_tiles):
 
 
 
-def generate_game_state(x_source, y_source, starts):   # [(x, y, direction)]
+def generate_game_state(x_source, y_source, starts, mode='a_star'):   # [(x, y, direction)]
 
     src = Tile(x_source, y_source, is_source=True)
     for way in starts:
@@ -227,11 +227,16 @@ def generate_game_state(x_source, y_source, starts):   # [(x, y, direction)]
     # Random rotate and fill water
     num_leak, num_no_water, num_wall, num_invalid_deadend, num_loop = 0, 0, 0, 0, 0
 
-    for tile in all_tiles:
+    for i, tile in enumerate(all_tiles):
         if tile.is_source:
             continue
 
         rotate_time = random.randrange(4)
+        if i < len(all_tiles) - 5 and mode == 'dfs':
+            rotate_time = 0
+        
+        if mode == 'dfs' and i >= len(all_tiles) - 5:
+            rotate_time = random.randrange(4)
 
         for i in range(rotate_time):
             num_leak, num_no_water, num_wall, num_invalid_deadend, num_loop = tile.rotate_right(src, all_tiles) 
@@ -460,7 +465,7 @@ def init_and_get_solution(grid_size, mode='a_star'):
     GRID_SIZE = grid_size
     num_opened_head, num_no_water, num_wall, num_invalid_deadend, num_loop, all_tiles = 1, None, None, None, None, None
 
-    while num_opened_head % 2 == 1:
+    while num_opened_head % 2 == 1 or mode != 'a_star':
         print('try')
         x = random.randrange(1, GRID_SIZE - 1)
         y = random.randrange(1, GRID_SIZE - 1)
@@ -475,8 +480,9 @@ def init_and_get_solution(grid_size, mode='a_star'):
             directions.append(direction)
             direction_choices.remove(direction)
 
-        num_opened_head, num_no_water, num_wall, num_invalid_deadend, num_loop, all_tiles = generate_game_state(x, y, directions)
-
+        num_opened_head, num_no_water, num_wall, num_invalid_deadend, num_loop, all_tiles = generate_game_state(x, y, directions, mode=mode)
+        if num_no_water <= 5:
+            mode = 'a_star'
 
     
     start_time = time.time()

@@ -1,6 +1,8 @@
 import pygame
+from copy import deepcopy
+import time
 from core import get_tile_index, blind_search
-from game_utils import create_grid, update_grid
+from game_utils import create_grid, update_grid, copy_grid
 
 # Khởi tạo Pygame
 pygame.init()
@@ -105,11 +107,20 @@ def draw_dfs_solve_button():
     return button_solve
 
 
+def draw_dfs_reset_state_3x3():
+    font = pygame.font.SysFont('Georgia', 18, bold=True)
+    button_solve = pygame.Rect(SCREEN_WIDTH - 200, 350, 135, 30)
+    pygame.draw.rect(screen, GREEN, button_solve)
+    text_solve = font.render("RESET 3x3", True, WHITE)
+    screen.blit(text_solve, (button_solve.x + 10, button_solve.y + 5))
+    return button_solve
+
+
 def draw_num_state(num_state=0):
     font = pygame.font.SysFont('Georgia', 22, bold=True)
     text = font.render(f'Number of stored states: {num_state}', True, BLACK)
     text_rect = text.get_rect()
-    text_rect.center = (SCREEN_WIDTH - 200, 380)
+    text_rect.center = (SCREEN_WIDTH - 200, 430)
     screen.blit(text, text_rect)
     return text_rect
 
@@ -118,7 +129,7 @@ def draw_total_time(total_time=0):
     font = pygame.font.SysFont('Georgia', 22, bold=True)
     text = font.render(f'Total time: {round(total_time, 3)} seconds', True, BLACK)
     text_rect = text.get_rect()
-    text_rect.center = (SCREEN_WIDTH - 200, 480)
+    text_rect.center = (SCREEN_WIDTH - 200, 530)
     screen.blit(text, text_rect)
     return text_rect
 
@@ -133,12 +144,16 @@ def draw_source(x, y):
 
 # Hàm chính
 def main():
-    canSolveDFS = False
     solved = False
     rotate_solving_event = pygame.USEREVENT + 1
     pygame.time.set_timer(rotate_solving_event, 1000)
     grid_size = DEFAULT_GRID_SIZE
     grid, instructions, num_state, total_time, all_tiles, image_dict = create_grid(grid_size)
+    a_star_instructions_3x3 = None
+    a_star_grid_3x3 = None
+    a_star_num_state_3x3 = None
+    a_star_total_time = None
+    a_star_all_tiles = None
     src = all_tiles[0]
     print(f'source : {src.x} {src.y}')
 
@@ -175,6 +190,7 @@ def main():
                     solved = True
                     print('Finish solving')
                     instructions_idx = 0
+                    pygame.time.set_timer(rotate_solving_event, 1000)
                     
                 continue
 
@@ -212,8 +228,13 @@ def main():
                     elif button_3x3.collidepoint(event.pos):
                         grid_size = GRID_SIZE_3x3
                         grid, instructions, num_state, total_time, all_tiles, image_dict = create_grid(grid_size, mode='dfs')
+                        a_star_instructions_3x3 = instructions.copy()
+                        a_star_grid_3x3 = copy_grid(grid)
+                        a_star_all_tiles = deepcopy(all_tiles)
+                        a_star_num_state_3x3 = num_state
+                        a_star_total_time = total_time
+                        # a_star_all_tiles = deepcopy(all_tiles)
                         src = all_tiles[0]
-                        canSolveDFS = True
                         solved = False
 
                     elif a_star_button_solve.collidepoint(event.pos):
@@ -222,9 +243,24 @@ def main():
                         # instructions_idx += 1
 
                     elif dfs_button_solve.collidepoint(event.pos):
-                        dfs_instructions, dfs_num_state = blind_search(all_tiles)
+                        start_time = time.time() 
+                        instructions, dfs_num_state = blind_search(all_tiles)
+                        pygame.time.set_timer(rotate_solving_event, 100)
+                        print(f'Dfs: {len(instructions)}')
                         num_state = dfs_num_state
-                        total_time = 'inf' 
+                        total_time = time.time() - start_time 
+                        solved = True
+                        solving = True
+                        instructions_idx = 0
+                        instruction_x, instruction_y, instruction_cmd = instructions[instructions_idx]
+
+                    elif reset_3x3_btn.collidepoint(event.pos):
+                        print('wtf')
+                        grid = copy_grid(a_star_grid_3x3)
+                        all_tiles = deepcopy(a_star_all_tiles)
+                        total_time = a_star_total_time
+                        instructions = a_star_instructions_3x3
+                        num_state = a_star_num_state_3x3
                         solved = False
 
 
@@ -235,8 +271,11 @@ def main():
         if not solved:
             a_star_button_solve = draw_a_star_solve_button()
 
-        if canSolveDFS and not solved:
+        if grid_size == GRID_SIZE_3x3 and not solved:
             dfs_button_solve = draw_dfs_solve_button()
+
+        if grid_size == GRID_SIZE_3x3 and solved:    
+            reset_3x3_btn = draw_dfs_reset_state_3x3()
 
         num_state_rect = draw_num_state(num_state)
         total_time_rect = draw_total_time(total_time)

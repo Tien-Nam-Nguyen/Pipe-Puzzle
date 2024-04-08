@@ -1,4 +1,5 @@
 import pygame
+import copy
 from core import init_and_get_solution
 import os
 
@@ -196,3 +197,38 @@ def update_grid(grid, image_dict, all_tiles):
         grid[x_grid][y_grid] = img
 
     return grid, all_tiles
+
+
+def copy_grid(grid):
+    """Sao chép một lưới các đối tượng Surface trong Pygame.
+
+    Args:
+        grid: Lưới các đối tượng Surface.
+
+    Returns:
+        Một bản sao sâu của lưới.
+    """
+
+    # Tạo một lưới mới để lưu trữ bản sao.
+    new_grid = []
+
+    # Lặp qua từng hàng trong lưới gốc.
+    for row in grid:
+
+        # Tạo một hàng mới trong lưới mới.
+        new_row = []
+
+        # Lặp qua từng đối tượng Surface trong hàng.
+        for surface in row:
+
+            # Sao chép sâu đối tượng Surface.
+            new_surface = surface.copy()
+
+            # Thêm bản sao vào hàng mới.
+            new_row.append(new_surface)
+
+        # Thêm hàng mới vào lưới mới.
+        new_grid.append(new_row)
+
+    # Trả về lưới mới.
+    return new_grid
