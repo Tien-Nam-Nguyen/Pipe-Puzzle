@@ -25,10 +25,19 @@ class Bounds(NamedTuple):
     left: int
     bottom: int
 
+    def __str__(self):
+        return f"Bounds(right={self.right}, top={self.top}, left={self.left}, bottom={self.bottom})"
+
 
 class Connection(NamedTuple):
     max_count: int
     connected: list[Coordinate]
+
+    def __str__(self):
+        if len(self.connected) < 5:
+            return f"Connection(max_count={self.max_count}, connected={self.connected})"
+
+        return f"Connection(max_count={self.max_count}, num_of_connections={len(self.connected)})"
 
 
 class GameState(NamedTuple):
