@@ -226,7 +226,7 @@ def duplicate_random_connections(
             continue
 
         random_anchor = single_connected[randint(0, len(single_connected) - 1)]
-        connect(new_connections, anchor, random_anchor)
+        new_connections = connect(new_connections, anchor, random_anchor)
 
     return new_connections
 
