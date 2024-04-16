@@ -4,7 +4,7 @@ from .copy_connections import copy_connections
 
 
 def is_same_line(a: tuple[Coordinate, Coordinate], b: tuple[Coordinate, Coordinate]):
-    return a[0] == b[0] and a[1] == b[1]
+    return (a[0] == b[0] and a[1] == b[1]) or (a[0] == b[1] and a[1] == b[0])
 
 
 def validate_non_intersecting_connection(
