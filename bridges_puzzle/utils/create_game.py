@@ -102,11 +102,71 @@ def get_non_intersecting_coords(
     return non_intersecting_coords
 
 
+def duplicate_random_connections(
+    connections: dict[Coordinate, Connection],
+    difficulty: int = 0,
+) -> dict[Coordinate, Connection]:
+    """Randomly picks a random number of anchor and upgrade a random connection of it to a duplicated connection.
+
+    Args:
+        connections (dict[Coordinate, Connection]): The connections dictionary.
+        difficulty (int, optional): How many of the anchors will be upgraded. Defaults to 1. Available values are [0, 9].
+
+    Returns:
+        dict[Coordinate, Connection]: The connections dictionary with the duplicated connections.
+    """
+    if difficulty < 0 or difficulty > 9:
+        raise ValueError("Invalid difficulty. Must be between 0 and 9.")
+
+    new_connections = connections.copy()
+
+    if difficulty == 0:
+        return new_connections
+
+    upgradable_anchors = [
+        anchor for anchor in connections.keys() if randint(1, 9) <= difficulty
+    ]
+
+    for anchor in upgradable_anchors:
+        connection = new_connections[anchor]
+
+        if len(connection.connected) == 0:
+            continue
+
+        single_connected = [
+            c for c in connection.connected if connection.connected.count(c) == 1
+        ]
+
+        if len(single_connected) == 0:
+            continue
+
+        random_anchor = single_connected[randint(0, len(single_connected) - 1)]
+        connect(new_connections, anchor, random_anchor)
+
+    return new_connections
+
+
 def create_game(
     anchor_count: int,
     bounds: Bounds,
+    difficulty: int = 0,
     seed_value: int | float | str | bytes | bytearray | None = None,
 ) -> GameState:
+    """Creates a game state with the given anchor count and bounds.
+
+    Args:
+        anchor_count (int): The number of anchors to place.
+        bounds (Bounds): The bounds of the game.
+        difficulty (int, optional): The difficulty of the game. Defaults to 0. Available values are [0, 9].
+        seed_value (int | float | str | bytes | bytearray | None, optional): The seed value for the random number generator. Defaults to None.
+
+    Raises:
+        ValueError: Error raised when create parameters are invalid.
+        NotEnoughSpaceError: Error raised when there is not enough space to place all anchors using the current bounds, anchor count and seed value.
+
+    Returns:
+        GameState: The game state.
+    """
     seed(seed_value)
 
     if anchor_count < 4:
@@ -153,6 +213,8 @@ def create_game(
         available_anchors.append(new_anchor)
 
         anchor_left -= 1
+
+    connections = duplicate_random_connections(connections, difficulty)
 
     if anchor_left > 0:
         raise NotEnoughSpaceError(
