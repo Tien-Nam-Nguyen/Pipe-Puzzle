@@ -1,5 +1,6 @@
 from ..GameState import Coordinate, Connection
 from .is_intersecting import is_intersecting
+from .copy_connections import copy_connections
 
 
 def is_same_line(a: tuple[Coordinate, Coordinate], b: tuple[Coordinate, Coordinate]):
@@ -48,7 +49,7 @@ def connect(
         raise ValueError(message)
 
     if existing_connections == 1:
-        new_connections = connections.copy()
+        new_connections = copy_connections(connections)
         new_connections[a].connected.append(b)
         new_connections[b].connected.append(a)
         return new_connections
@@ -59,7 +60,7 @@ def connect(
 
     validate_non_intersecting_connection(connections, a, b)
 
-    new_connections = connections.copy()
+    new_connections = copy_connections(connections)
     new_connections[a].connected.append(b)
     new_connections[b].connected.append(a)
     return new_connections

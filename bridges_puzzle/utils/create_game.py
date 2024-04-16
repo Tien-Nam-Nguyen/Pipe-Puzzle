@@ -4,6 +4,7 @@ from typing import Generator, Callable
 
 from ..GameState import Coordinate, Bounds, Connection, GameState
 from .is_intersecting import is_intersecting
+from .copy_connections import copy_connections
 from .connect import connect
 
 
@@ -202,7 +203,7 @@ def duplicate_random_connections(
     if difficulty < 0 or difficulty > 9:
         raise ValueError("Invalid difficulty. Must be between 0 and 9.")
 
-    new_connections = connections.copy()
+    new_connections = copy_connections(connections)
 
     if difficulty == 0:
         return new_connections

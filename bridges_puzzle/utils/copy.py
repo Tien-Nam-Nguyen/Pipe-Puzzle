@@ -1,15 +1,12 @@
+from .copy_connections import copy_connections
 from ..GameState import GameState, Coordinate, Connection, Bounds
 
 
 def copy(game_state: GameState) -> GameState:
     connections, bounds = game_state
+    copy_connections = copy_connections(connections)
+
     return GameState(
-        connections={
-            Coordinate(anchor.x, anchor.y): Connection(
-                connection.max_count,
-                [Coordinate(c.x, c.y) for c in connection.connected],
-            )
-            for anchor, connection in connections.items()
-        },
+        connections=copy_connections,
         bounds=Bounds(*bounds),
     )

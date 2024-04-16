@@ -1,5 +1,6 @@
 from .add_bridge import add_bridge
 from .connect import connect
+from .copy_connections import copy_connections
 from .copy import copy
 from .create_game import create_game
 from .generate_next_states import generate_next_states
