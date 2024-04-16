@@ -17,3 +17,6 @@ build/
 # Virtual environments
 venv/
 env/
+
+# logs
+logs/
