@@ -39,6 +39,10 @@ game = reset(solution)
 
 print("is_solved(game):", is_solved(game)) # False
 
+# Generate all possible states of the game from the current state
+for state, pair in generate_next_states(game):
+    print(f"Connected: {pair} to get state: {state}")
+
 # Print the abbreviated game state
 print(f"Game: {game}")
 
