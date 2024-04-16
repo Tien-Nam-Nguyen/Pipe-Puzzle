@@ -61,6 +61,38 @@ def get_free_space_checker(
     return is_valid
 
 
+def get_non_intersecting_coords(
+    target: Coordinate, connections: dict[Coordinate, Connection], bounds: Bounds
+) -> list[Coordinate]:
+    is_in_free_space = get_free_space_checker((target, connections[target]))
+    non_intersecting_coords = []
+    existing_lines = [
+        (anchor, other_anchor)
+        for anchor, connecting_anchors in connections.items()
+        if anchor != target
+        for other_anchor in connecting_anchors.connected
+        if other_anchor != target
+    ]
+
+    for c in bounded_main_cross(target, bounds):
+        if c in connections[target].connected:
+            continue
+
+        new_line = (target, c)
+
+        if any(
+            is_intersecting(new_line, existing_line) for existing_line in existing_lines
+        ):
+            continue
+
+        if not is_in_free_space(c):
+            continue
+
+        non_intersecting_coords.append(c)
+
+    return non_intersecting_coords
+
+
 def create_game(
     anchor_count: int,
     bounds: Bounds,
@@ -83,34 +115,9 @@ def create_game(
     while anchor_left > 0 and len(available_anchors) > 0:
         expandable_anchor = available_anchors[randint(0, len(available_anchors) - 1)]
 
-        is_in_free_space = get_free_space_checker(
-            (expandable_anchor, connections[expandable_anchor])
+        non_intersecting_coords = get_non_intersecting_coords(
+            expandable_anchor, connections, bounds
         )
-        non_intersecting_coords = []
-        existing_lines = [
-            (anchor, other_anchor)
-            for anchor, connecting_anchors in connections.items()
-            if anchor != expandable_anchor
-            for other_anchor in connecting_anchors.connected
-            if other_anchor != expandable_anchor
-        ]
-
-        for c in bounded_main_cross(expandable_anchor, bounds):
-            if c in connections[expandable_anchor].connected:
-                continue
-
-            new_line = (expandable_anchor, c)
-
-            if any(
-                is_intersecting(new_line, existing_line)
-                for existing_line in existing_lines
-            ):
-                continue
-
-            if not is_in_free_space(c):
-                continue
-
-            non_intersecting_coords.append(c)
 
         if len(non_intersecting_coords) == 0:
             available_anchors.remove(expandable_anchor)
