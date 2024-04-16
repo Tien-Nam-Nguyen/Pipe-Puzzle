@@ -34,3 +34,9 @@ class Connection(NamedTuple):
 class GameState(NamedTuple):
     connections: dict[Coordinate, Connection]
     bounds: Bounds
+
+    def __str__(self):
+        if len(self.connections) < 5:
+            return f"GameState(connections={self.connections}, bounds={self.bounds})"
+
+        return f"GameState(num_of_connections={len(self.connections)}, bounds={self.bounds})"
