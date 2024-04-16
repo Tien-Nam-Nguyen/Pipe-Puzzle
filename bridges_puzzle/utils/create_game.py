@@ -16,6 +16,90 @@ class NotEnoughSpaceError(Exception):
     state: GameState | None = None
 
 
+def create_game(
+    anchor_count: int,
+    bounds: Bounds,
+    difficulty: int = 0,
+    seed_value: int | float | str | bytes | bytearray | None = None,
+) -> GameState:
+    """Creates a game state with the given anchor count and bounds.
+
+    Args:
+        anchor_count (int): The number of anchors to place.
+        bounds (Bounds): The bounds of the game.
+        difficulty (int, optional): The difficulty of the game. Defaults to 0. Available values are [0, 9].
+        seed_value (int | float | str | bytes | bytearray | None, optional): The seed value for the random number generator. Defaults to None.
+
+    Raises:
+        ValueError: Error raised when create parameters are invalid.
+        NotEnoughSpaceError: Error raised when there is not enough space to place all anchors using the current bounds, anchor count and seed value.
+
+    Returns:
+        GameState: The game state.
+    """
+    seed(seed_value)
+
+    if anchor_count < 4:
+        raise ValueError("Invalid anchor count. Must be at least 4.")
+
+    available_anchors = [
+        Coordinate(
+            randint(bounds.left, bounds.right), randint(bounds.bottom, bounds.top)
+        )
+    ]
+
+    connections = {available_anchors[0]: Connection(8, [])}
+    anchor_left = anchor_count - 1
+
+    while anchor_left > 0 and len(available_anchors) > 0:
+        expandable_anchor = available_anchors[randint(0, len(available_anchors) - 1)]
+
+        non_intersecting_coords = get_non_intersecting_coords(
+            expandable_anchor, connections, bounds
+        )
+
+        if len(non_intersecting_coords) == 0:
+            available_anchors.remove(expandable_anchor)
+            continue
+
+        new_anchor = non_intersecting_coords[
+            randint(0, len(non_intersecting_coords) - 1)
+        ]
+
+        connections[new_anchor] = Connection(8, [])
+        connections = connect(connections, expandable_anchor, new_anchor)
+
+        unique_connections = len(
+            reduce(
+                lambda acc, c: acc + [c] if c not in acc else acc,
+                connections[expandable_anchor].connected,
+                [],
+            )
+        )
+
+        if unique_connections == 4:
+            available_anchors.remove(expandable_anchor)
+
+        available_anchors.append(new_anchor)
+
+        anchor_left -= 1
+
+    connections = duplicate_random_connections(connections, difficulty)
+    connections = sync_max_connections_to_current(connections)
+
+    if anchor_left > 0:
+        raise NotEnoughSpaceError(
+            NotEnoughSpaceError.message,
+            seed_value,
+            anchor_count,
+            anchor_count - anchor_left,
+            bounds,
+            GameState(connections, bounds),
+        )
+
+    return GameState(connections, bounds)
+
+
 def bounded_main_cross(
     coord: Coordinate, bounds: Bounds
 ) -> Generator[Coordinate, None, None]:
@@ -165,87 +249,3 @@ def sync_max_connections_to_current(
         )
 
     return new_connections
-
-
-def create_game(
-    anchor_count: int,
-    bounds: Bounds,
-    difficulty: int = 0,
-    seed_value: int | float | str | bytes | bytearray | None = None,
-) -> GameState:
-    """Creates a game state with the given anchor count and bounds.
-
-    Args:
-        anchor_count (int): The number of anchors to place.
-        bounds (Bounds): The bounds of the game.
-        difficulty (int, optional): The difficulty of the game. Defaults to 0. Available values are [0, 9].
-        seed_value (int | float | str | bytes | bytearray | None, optional): The seed value for the random number generator. Defaults to None.
-
-    Raises:
-        ValueError: Error raised when create parameters are invalid.
-        NotEnoughSpaceError: Error raised when there is not enough space to place all anchors using the current bounds, anchor count and seed value.
-
-    Returns:
-        GameState: The game state.
-    """
-    seed(seed_value)
-
-    if anchor_count < 4:
-        raise ValueError("Invalid anchor count. Must be at least 4.")
-
-    available_anchors = [
-        Coordinate(
-            randint(bounds.left, bounds.right), randint(bounds.bottom, bounds.top)
-        )
-    ]
-
-    connections = {available_anchors[0]: Connection(8, [])}
-    anchor_left = anchor_count - 1
-
-    while anchor_left > 0 and len(available_anchors) > 0:
-        expandable_anchor = available_anchors[randint(0, len(available_anchors) - 1)]
-
-        non_intersecting_coords = get_non_intersecting_coords(
-            expandable_anchor, connections, bounds
-        )
-
-        if len(non_intersecting_coords) == 0:
-            available_anchors.remove(expandable_anchor)
-            continue
-
-        new_anchor = non_intersecting_coords[
-            randint(0, len(non_intersecting_coords) - 1)
-        ]
-
-        connections[new_anchor] = Connection(8, [])
-        connections = connect(connections, expandable_anchor, new_anchor)
-
-        unique_connections = len(
-            reduce(
-                lambda acc, c: acc + [c] if c not in acc else acc,
-                connections[expandable_anchor].connected,
-                [],
-            )
-        )
-
-        if unique_connections == 4:
-            available_anchors.remove(expandable_anchor)
-
-        available_anchors.append(new_anchor)
-
-        anchor_left -= 1
-
-    connections = duplicate_random_connections(connections, difficulty)
-    connections = sync_max_connections_to_current(connections)
-
-    if anchor_left > 0:
-        raise NotEnoughSpaceError(
-            NotEnoughSpaceError.message,
-            seed_value,
-            anchor_count,
-            anchor_count - anchor_left,
-            bounds,
-            GameState(connections, bounds),
-        )
-
-    return GameState(connections, bounds)
