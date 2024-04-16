@@ -17,10 +17,10 @@ Available difficulty levels go from 0 to 9 and defaults to 0.
 **Notes**:
 
 - A difficulty of 0 doesn't guarantee all bridges are single. It only suggests that the majority of bridges are single. A difficulty of 9 will try to upgrade all bridges to be double bridges.
-- `create_game(...)` returns a `GameState` that has already been solved. You can call `reset(game_state)` to get a copy of the game state in its initial state.
+- `create_game(...)` returns a `GameState` that has already been solved. You can call `reset(game_state)` to get a copy of the game state in its initial state. You can also call `is_solved(game_state)` to check if the game state is solved.
 
 ```python
-from bridges_puzzle import create_game, stringify, reset, Bounds
+from bridges_puzzle import create_game, stringify, reset, is_solved, Bounds
 
 # Create a game with 10 anchors and a 3x3 grid
 bounds = Bounds(3, 3, 0, 0)
@@ -32,8 +32,12 @@ solution = create_game(anchor_count, bounds)
 # Increased difficulty. How often two anchors are connected using double bridges.
 solution = create_game(anchor_count, bounds, 5)
 
+print("is_solved(solution):", is_solved(solution)) # True
+
 # Reset the game state to its initial state
 game = reset(solution)
+
+print("is_solved(game):", is_solved(game)) # False
 
 # Print the abbreviated game state
 print(f"Game: {game}")
