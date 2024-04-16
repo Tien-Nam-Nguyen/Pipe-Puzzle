@@ -13,20 +13,21 @@ def stringify(game_state: GameState, show_coordinates=False) -> str:
                 None,
             )
 
-            if entry is not None:
-                anchor, connection = entry
-
-                if show_coordinates:
-                    stringy += f"{anchor}|{connection.max_count} "
-                    continue
-
-                stringy += f"{connection.max_count} "
-            else:
+            if entry is None:
                 if show_coordinates:
                     stringy += f"{Coordinate.placeholder_string()}|- "
                     continue
 
                 stringy += "- "
+                continue
+
+            anchor, connection = entry
+
+            if show_coordinates:
+                stringy += f"{anchor}|{connection.max_count} "
+                continue
+
+            stringy += f"{connection.max_count} "
 
         stringy += "\n"
 
