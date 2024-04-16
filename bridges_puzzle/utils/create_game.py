@@ -146,6 +146,27 @@ def duplicate_random_connections(
     return new_connections
 
 
+def sync_max_connections_to_current(
+    connections: dict[Coordinate, Connection]
+) -> dict[Coordinate, Connection]:
+    """Make the current number of connections equal to the maximum number of connections.
+
+    Args:
+        connections (dict[Coordinate, Connection]): The connections dictionary.
+
+    Returns:
+        dict[Coordinate, Connection]: The connections dictionary with the synced connections.
+    """
+    new_connections: dict[Coordinate, Connection] = {}
+
+    for anchor, connection in connections.items():
+        new_connections[anchor] = Connection(
+            len(connection.connected), connection.connected
+        )
+
+    return new_connections
+
+
 def create_game(
     anchor_count: int,
     bounds: Bounds,
@@ -215,6 +236,7 @@ def create_game(
         anchor_left -= 1
 
     connections = duplicate_random_connections(connections, difficulty)
+    connections = sync_max_connections_to_current(connections)
 
     if anchor_left > 0:
         raise NotEnoughSpaceError(
