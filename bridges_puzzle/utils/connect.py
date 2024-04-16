@@ -1,5 +1,5 @@
 from ..GameState import Coordinate, Connection
-from .has import has
+from .any_predicate import any_predicate
 from .is_intersecting import is_intersecting
 
 
@@ -17,7 +17,7 @@ def validate_non_intersecting_connection(
         for end_point in conns.connected:
             existing_line = (start_point, end_point)
 
-            if has(
+            if any_predicate(
                 checked,
                 lambda c, existing_line=existing_line: is_same_line(c, existing_line),
             ):
