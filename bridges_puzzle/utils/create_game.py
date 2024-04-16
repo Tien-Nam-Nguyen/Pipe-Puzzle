@@ -7,6 +7,15 @@ from .is_intersecting import is_intersecting
 from .connect import connect
 
 
+class NotEnoughSpaceError(Exception):
+    message = "Not enough space to place all anchors. Consider increasing the bounds, or reducing the number of anchors."
+    seed: int | float | str | bytes | bytearray | None = None
+    target_anchor_count: int = 0
+    placed_anchor_count: int = 0
+    bounds: Bounds = Bounds(0, 0, 0, 0)
+    state: GameState | None = None
+
+
 def bounded_main_cross(
     coord: Coordinate, bounds: Bounds
 ) -> Generator[Coordinate, None, None]:
@@ -146,6 +155,13 @@ def create_game(
         anchor_left -= 1
 
     if anchor_left > 0:
-        print(f"Coudn't place all anchors. {anchor_left} anchors left.")
+        raise NotEnoughSpaceError(
+            NotEnoughSpaceError.message,
+            seed_value,
+            anchor_count,
+            anchor_count - anchor_left,
+            bounds,
+            GameState(connections, bounds),
+        )
 
     return GameState(connections, bounds)
