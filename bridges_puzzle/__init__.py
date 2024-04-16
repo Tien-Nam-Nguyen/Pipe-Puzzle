@@ -7,3 +7,4 @@ from .utils import (
     is_solved,
     generate_next_states,
 )
+from .gui import gui
