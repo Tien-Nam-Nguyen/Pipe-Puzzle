@@ -1,11 +1,13 @@
 import pygame
 from typing import NamedTuple
+from enum import Enum
 
 from .Anchor import Anchor, DEFAULT_COLOR
 from .Bridge import Bridge
 from .Wire import Wire
 from .Button import Button, ButtonEvents
 from .ScaleButton import ScaleButton
+from .LabelButton import LabelButton
 from .QuadraticBezier import QuadraticBezier
 from .GameObject import GameObject
 from ..utils import create_game, reset, copy_connections, connect
@@ -13,6 +15,21 @@ from ..GameState import Bounds, GameState, Coordinate
 
 
 SELECTED_COLOR = pygame.Color(190, 190, 190)
+
+
+class InputType(Enum):
+    ADD = 0
+    REMOVE = 1
+
+
+def get_input_label(type: InputType):
+    match type:
+        case InputType.ADD:
+            return "Add"
+        case InputType.REMOVE:
+            return "Remove"
+
+    return "Unknown"
 
 
 class SelectedAnchor(NamedTuple):
@@ -35,6 +52,7 @@ def gui():
     OBJECTS: list[GameObject] = [
         Button,
         ScaleButton,
+        LabelButton,
         Anchor,
         Bridge,
         Wire,
@@ -56,6 +74,30 @@ def gui():
 
     board_size = 600
 
+    input_mode = InputType.ADD
+    input_mode_button = LabelButton(
+        100, 70, get_input_label(input_mode), pygame.Color(200, 240, 200)
+    )
+
+    def switch_input_type():
+        nonlocal input_mode_button
+        nonlocal input_mode
+
+        input_mode = (
+            InputType.ADD if input_mode == InputType.REMOVE else InputType.REMOVE
+        )
+
+        color = (
+            pygame.Color(200, 240, 200)
+            if input_mode == InputType.ADD
+            else pygame.Color(240, 200, 200)
+        )
+
+        input_mode_button.label = get_input_label(input_mode)
+        input_mode_button.color = color
+
+    input_mode_button.button.on(ButtonEvents.CLICK, switch_input_type)
+
     bridges = convert_to_bridges(screen, bounds, game_state, board_size)
     anchors = convert_to_anchors(screen, bounds, game_state, board_size)
 
@@ -63,7 +105,7 @@ def gui():
     wire = Wire(0, 0, board_size)
     wire.active = False
 
-    static_objects: list[GameObject] = [wire, *(anchors.values())]
+    static_objects: list[GameObject] = [wire, *(anchors.values()), input_mode_button]
     game_objects: list[GameObject] = [*bridges, *static_objects]
 
     def select(anchor: Anchor, coords: Coordinate):
@@ -75,7 +117,7 @@ def gui():
             selected.anchor.color = DEFAULT_COLOR
             selected = None
             wire.active = False
-            print(f"deselected {coords}")
+
             return
 
         if selected:
@@ -111,7 +153,38 @@ def gui():
         wire.active = True
         wire.x = anchor.x
         wire.y = anchor.y
-        print(f"selected {coords}")
+
+    def remove_connections_to_anchor(anchor: Anchor, coords: Coordinate):
+        nonlocal game_objects
+        nonlocal game_state
+        nonlocal anchors
+
+        connections = copy_connections(game_state.connections)
+
+        for coords_to_remove in connections[coords].connected:
+            connections[coords_to_remove].connected.remove(coords)
+            anchors[coords_to_remove].value = connections[
+                coords_to_remove
+            ].max_count - len(connections[coords_to_remove].connected)
+
+        connections[coords].connected.clear()
+
+        game_state = GameState(connections, game_state.bounds)
+
+        bridges = convert_to_bridges(screen, bounds, game_state, board_size)
+
+        for bridge in bridges:
+            bridge.start()
+
+        game_objects = [*bridges, *static_objects]
+
+        anchor.value = game_state.connections[coords].max_count
+
+    def handle_click_anchor(anchor: Anchor, coords: Coordinate):
+        if input_mode == InputType.ADD:
+            select(anchor, coords)
+        else:
+            remove_connections_to_anchor(anchor, coords)
 
     for coords, anchor in anchors.items():
         if anchor.value is None:
@@ -119,7 +192,7 @@ def gui():
 
         anchor.button.on(
             ButtonEvents.CLICK,
-            lambda anchor=anchor, coords=coords: select(anchor, coords),
+            lambda anchor=anchor, coords=coords: handle_click_anchor(anchor, coords),
         )
 
     delta_time = 0
