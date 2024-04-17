@@ -8,7 +8,7 @@
 pip install pygame
 ```
 
-### Step 2: **(WIP) CLI only** Create a game state
+### Step 2: Create a game state **(GUI UPDATE: See Step 2\* to run the GUI)**
 
 Game generation supports custom level dimensions and anchor count. The difficulty parameter is optional and can be used to increase the likelihood of double bridges being used.
 
@@ -52,4 +52,16 @@ print(stringify(game))
 # Pretty print the game state, showing coordinates
 print(stringify(game, show_coordinates=True))
 
+```
+
+### Step 2\*: Run the GUI
+
+```python
+# <current-working-directory>/test.py
+from bridges_puzzle import gui
+gui()
+```
+
+```bash
+python test.py
 ```
