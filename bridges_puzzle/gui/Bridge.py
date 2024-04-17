@@ -13,14 +13,12 @@ from .GameObject import GameObject
 class Bridge(GameObject):
     def __init__(
         self,
-        screen: Surface,
-        clock: Clock,
         start: tuple[float, float],
         end: tuple[float, float],
         anim_delay: float,
         double=False,
     ):
-        super().__init__(screen, clock)
+        super().__init__()
         self.start_node = start
         self.end_node = end
         self.double = double

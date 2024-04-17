@@ -2,6 +2,8 @@ import pygame
 
 from .Anchor import Anchor
 from .Bridge import Bridge
+from .Button import Button
+from .GameObject import GameObject
 from ..utils import create_game, reset, copy_connections
 from ..GameState import Bounds, GameState, Coordinate
 
@@ -17,6 +19,16 @@ def gui():
 
     screen = pygame.display.set_mode((1280, 720))
     clock = pygame.time.Clock()
+
+    OBJECTS: list[GameObject] = [
+        Button,
+        Anchor,
+        Bridge,
+    ]
+
+    for obj in OBJECTS:
+        obj.init(screen, clock)
+
     running = True
 
     ncols = 7
@@ -29,8 +41,8 @@ def gui():
 
     board_size = 500
 
-    bridges = convert_to_bridges(screen, clock, bounds, first_state, board_size)
-    anchors = convert_to_anchors(screen, clock, bounds, first_state, board_size)
+    bridges = convert_to_bridges(screen, bounds, first_state, board_size)
+    anchors = convert_to_anchors(screen, bounds, first_state, board_size)
 
     game_objects = [*bridges, *anchors]
 
@@ -51,10 +63,10 @@ def gui():
         screen.fill("white")
 
         for game_object in game_objects:
-            game_object.render(delta_time, time)
+            game_object.update(delta_time, time)
 
         for game_object in game_objects:
-            game_object.update(delta_time, time)
+            game_object.render(delta_time, time)
 
         # RENDER YOUR GAME HERE
 
@@ -69,7 +81,6 @@ def gui():
 
 def convert_to_anchors(
     screen: pygame.Surface,
-    clock: pygame.time.Clock,
     bounds: Bounds,
     game_state: GameState,
     board_size: float,
@@ -93,8 +104,6 @@ def convert_to_anchors(
             if entry is None:
                 anchors.append(
                     Anchor(
-                        screen,
-                        clock,
                         (screen.get_width() - board_size) // 2 + anchor_size * x,
                         (screen.get_height() - board_size) // 2 + anchor_size * y,
                         anchor_radius,
@@ -107,8 +116,6 @@ def convert_to_anchors(
 
             anchors.append(
                 Anchor(
-                    screen,
-                    clock,
                     (screen.get_width() - board_size) // 2 + anchor_size * x,
                     (screen.get_height() - board_size) // 2 + anchor_size * y,
                     anchor_radius,
@@ -122,7 +129,6 @@ def convert_to_anchors(
 
 def convert_to_bridges(
     screen: pygame.Surface,
-    clock: pygame.time.Clock,
     bounds: Bounds,
     game_state: GameState,
     board_size: float,
@@ -147,8 +153,6 @@ def convert_to_bridges(
 
     bridge_objects = [
         Bridge(
-            screen,
-            clock,
             (
                 (screen.get_width() - board_size) // 2 + anchor_size * (coord.x),
                 (screen.get_height() - board_size) // 2 + anchor_size * (coord.y),

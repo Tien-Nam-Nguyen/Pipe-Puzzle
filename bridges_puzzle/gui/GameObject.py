@@ -3,9 +3,27 @@ from pygame.surface import Surface
 
 
 class GameObject:
-    def __init__(self, screen: Surface, clock: Clock):
-        self.screen = screen
-        self.clock = clock
+    _screen: Surface | None
+    _clock: Clock | None
+
+    @staticmethod
+    def init(screen: Surface, clock: Clock):
+        GameObject._screen = screen
+        GameObject._clock = clock
+
+    @property
+    def screen(self) -> Surface:
+        if GameObject._screen is None:
+            raise Exception("GameObject has not been initialized")
+
+        return GameObject._screen
+
+    @property
+    def clock(self) -> Clock:
+        if GameObject._clock is None:
+            raise Exception("GameObject has not been initialized")
+
+        return GameObject._clock
 
     def start(self):
         # OVERRIDE THIS METHOD
