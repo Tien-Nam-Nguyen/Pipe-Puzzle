@@ -7,6 +7,15 @@ def is_same_line(a: tuple[Coordinate, Coordinate], b: tuple[Coordinate, Coordina
     return (a[0] == b[0] and a[1] == b[1]) or (a[0] == b[1] and a[1] == b[0])
 
 
+def is_between(coord: Coordinate, a: Coordinate, b: Coordinate):
+    on_same_row = a.y == b.y and a.y == coord.y
+    on_same_col = a.x == b.x and a.x == coord.x
+
+    return (on_same_row and min(a.x, b.x) <= coord.x <= max(a.x, b.x)) or (
+        on_same_col and min(a.y, b.y) <= coord.y <= max(a.y, b.y)
+    )
+
+
 def validate_non_intersecting_connection(
     connections: dict[Coordinate, Connection], a: Coordinate, b: Coordinate
 ) -> None:
@@ -14,6 +23,11 @@ def validate_non_intersecting_connection(
     checked: list[tuple[Coordinate, Coordinate]] = []
 
     for start_point, conns in connections.items():
+        if start_point != a and start_point != b and is_between(start_point, a, b):
+            raise ValueError(
+                f"Invalid connection. Line {line} intersects with existing anchor {start_point}."
+            )
+
         for end_point in conns.connected:
             existing_line = (start_point, end_point)
 
