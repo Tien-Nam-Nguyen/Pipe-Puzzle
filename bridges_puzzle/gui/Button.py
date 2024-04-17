@@ -15,7 +15,7 @@ class ButtonEvents(Enum):
 
 class Button(GameObject):
     def __init__(self, rect: Rect):
-        self.rect = rect
+        self.rect = rect.copy()
         self._event_listener: dict[ButtonEvents, list[callable]] = {}
 
         self._clicked = False
@@ -60,6 +60,9 @@ class Button(GameObject):
         colliding = self.rect.collidepoint(mouse_pos)
         pressing = get_pressed()[0]
 
+        if colliding and pressing and not self._clicked and not self._entered:
+            return
+
         if colliding and pressing and not self._clicked:
             self._clicked = True
             self.emit(ButtonEvents.DOWN)
@@ -67,7 +70,6 @@ class Button(GameObject):
 
         if colliding and not pressing and self._clicked:
             self._clicked = False
-            # self._entered = False
             self.emit(ButtonEvents.UP)
             self.emit(ButtonEvents.CLICK)
             return
