@@ -24,7 +24,7 @@ class Bridge(GameObject):
         self.double = double
         self.anim_delay = anim_delay
 
-        self.anim_thickness = Tween(0, 10, 1000, Easing.EXPO, EasingMode.IN_OUT)
+        self.anim_thickness = Tween(0, 5, 1000, Easing.EXPO, EasingMode.IN_OUT)
 
     def start(self):
         self.start_time = get_ticks()
@@ -42,7 +42,7 @@ class Bridge(GameObject):
             return
 
         # draw double bridge
-        offset = 10
+        offset = 5
         is_horizontal = self.start_node[1] == self.end_node[1]
 
         if is_horizontal:
