@@ -36,8 +36,8 @@ def gui():
 
     bounds = Bounds(ncols - 1, nrows - 1, 0, 0)
     anchor_count = 7
-    first_state = create_game(anchor_count, bounds, 1)
-    # first_state = reset(solution)
+    first_state = create_game(anchor_count, bounds, 5)
+    # first_state = reset(first_state)
 
     board_size = 500
 
