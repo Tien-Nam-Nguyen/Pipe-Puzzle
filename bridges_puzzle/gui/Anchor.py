@@ -11,6 +11,8 @@ from .GameObject import GameObject
 from .Button import ButtonEvents
 from .ScaleButton import ScaleButton
 
+DEFAULT_COLOR = Color(230, 230, 230)
+
 
 class Anchor(GameObject):
     def __init__(
@@ -20,11 +22,13 @@ class Anchor(GameObject):
         radius: float,
         anim_delay: float,
         value: float | None = None,
+        color: Color = Color(230, 230, 230),
     ):
         super().__init__()
         self.x = x
         self.y = y
         self.value = value
+        self.color = color
         self.radius = 0.0
         self.anim_delay = anim_delay
 
@@ -35,13 +39,12 @@ class Anchor(GameObject):
 
     def start(self):
         self.start_time = get_ticks()
-        self.button.on(ButtonEvents.CLICK, lambda: print(f"clicked {self.value}"))
 
     def render(self, delta_time: float, time: float):
         if self.value is None:
             rect(
                 self.screen,
-                Color(230, 230, 230),
+                self.color,
                 self.rect,
                 width=2,
                 border_radius=20,
@@ -51,7 +54,7 @@ class Anchor(GameObject):
 
         rect(
             self.screen,
-            Color(230, 230, 230),
+            self.color,
             self.rect,
             border_radius=20,
         )
