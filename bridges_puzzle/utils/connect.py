@@ -24,7 +24,12 @@ def validate_non_intersecting_connection(
 
             checked.append(existing_line)
 
-            converging = line[0] == existing_line[0] or line[0] == existing_line[1]
+            converging = (
+                line[0] == existing_line[0]
+                or line[0] == existing_line[1]
+                or line[1] == existing_line[0]
+                or line[1] == existing_line[1]
+            )
 
             if not converging and is_intersecting(line, existing_line):
                 message = f"Invalid connection. Line {line} intersects with existing line {existing_line}."

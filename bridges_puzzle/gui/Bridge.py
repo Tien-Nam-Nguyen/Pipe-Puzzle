@@ -15,19 +15,16 @@ class Bridge(GameObject):
         self,
         start: tuple[float, float],
         end: tuple[float, float],
-        anim_delay: float,
         double=False,
     ):
         super().__init__()
         self.start_node = start
         self.end_node = end
         self.double = double
-        self.anim_delay = anim_delay
-
-        self.anim_thickness = Tween(0, 5, 1000, Easing.EXPO, EasingMode.IN_OUT)
+        self.anim_thickness = Tween(0, 5, 500, Easing.EXPO, EasingMode.IN_OUT)
 
     def start(self):
-        self.start_time = get_ticks()
+        self.anim_thickness.start()
 
     def render(self, delta_time: float, time: float):
         if not self.double:
@@ -81,10 +78,5 @@ class Bridge(GameObject):
         )
 
     def update(self, delta_time: float, time: float):
-        if time - self.start_time > self.anim_delay:
-            self.anim_thickness.start()
-            # set infinity so that it doesn't start again
-            self.start_time = float("inf")
-
         if self.anim_thickness.animating:
             self.anim_thickness.update()

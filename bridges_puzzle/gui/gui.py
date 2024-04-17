@@ -1,4 +1,5 @@
 import pygame
+from typing import NamedTuple
 
 from .Anchor import Anchor, DEFAULT_COLOR
 from .Bridge import Bridge
@@ -6,10 +7,15 @@ from .Wire import Wire
 from .Button import Button, ButtonEvents
 from .QuadraticBezier import QuadraticBezier
 from .GameObject import GameObject
-from ..utils import create_game, reset, copy_connections
+from ..utils import create_game, reset, copy_connections, connect
 from ..GameState import Bounds, GameState, Coordinate
 
 SELECTED_COLOR = pygame.Color(190, 190, 190)
+
+
+class SelectedAnchor(NamedTuple):
+    anchor: Anchor
+    coords: Coordinate
 
 
 def gui():
@@ -42,33 +48,63 @@ def gui():
 
     bounds = Bounds(ncols - 1, nrows - 1, 0, 0)
     anchor_count = 7
-    first_state = create_game(anchor_count, bounds, 5)
-    first_state = reset(first_state)
+    game_state = create_game(anchor_count, bounds, 5, 0)
+    game_state = reset(game_state)
 
     board_size = 500
 
-    bridges = convert_to_bridges(screen, bounds, first_state, board_size)
-    anchors = convert_to_anchors(screen, bounds, first_state, board_size)
+    bridges = convert_to_bridges(screen, bounds, game_state, board_size)
+    anchors = convert_to_anchors(screen, bounds, game_state, board_size)
 
-    selected: Anchor | None = None
+    selected: SelectedAnchor | None = None
     wire = Wire(0, 0, board_size)
     wire.active = False
 
+    static_objects: list[GameObject] = [wire, *(anchors.values())]
+    game_objects: list[GameObject] = [*bridges, *static_objects]
+
     def select(anchor: Anchor, coords: Coordinate):
         nonlocal selected
+        nonlocal game_objects
+        nonlocal game_state
 
-        if selected is anchor:
-            selected.color = DEFAULT_COLOR
+        if selected and selected.anchor is anchor:
+            selected.anchor.color = DEFAULT_COLOR
             selected = None
             wire.active = False
             print(f"deselected {coords}")
             return
 
-        if selected is not None:
-            selected.color = DEFAULT_COLOR
+        if selected:
+            try:
+                connections = connect(game_state.connections, selected.coords, coords)
+                game_state = GameState(connections, game_state.bounds)
 
-        selected = anchor
-        selected.color = SELECTED_COLOR
+                bridges = convert_to_bridges(screen, bounds, game_state, board_size)
+
+                for bridge in bridges:
+                    bridge.start()
+
+                game_objects = [*bridges, *static_objects]
+
+                anchor.value = game_state.connections[coords].max_count - len(
+                    game_state.connections[coords].connected
+                )
+
+                selected.anchor.value = game_state.connections[
+                    selected.coords
+                ].max_count - len(game_state.connections[selected.coords].connected)
+
+                selected.anchor.color = DEFAULT_COLOR
+                selected = None
+                wire.active = False
+                return
+            except Exception as e:
+                print(e)
+                return
+
+        selected = SelectedAnchor(anchor, coords)
+        selected.anchor.color = SELECTED_COLOR
         wire.active = True
         wire.x = anchor.x
         wire.y = anchor.y
@@ -82,8 +118,6 @@ def gui():
             ButtonEvents.CLICK,
             lambda anchor=anchor, coords=coords: select(anchor, coords),
         )
-
-    game_objects: list[GameObject] = [*bridges, wire, *(anchors.values())]
 
     delta_time = 0
     time = 0
@@ -139,7 +173,7 @@ def convert_to_anchors(
             )
 
             if entry is None:
-                anchors[(x, y)] = Anchor(
+                anchors[Coordinate(x, y)] = Anchor(
                     (screen.get_width() - board_size) // 2 + anchor_size * x,
                     (screen.get_height() - board_size) // 2 + anchor_size * y,
                     anchor_radius,
@@ -149,7 +183,7 @@ def convert_to_anchors(
 
             _, connection = entry
 
-            anchors[(x, y)] = Anchor(
+            anchors[Coordinate(x, y)] = Anchor(
                 (screen.get_width() - board_size) // 2 + anchor_size * x,
                 (screen.get_height() - board_size) // 2 + anchor_size * y,
                 anchor_radius,
@@ -194,7 +228,6 @@ def convert_to_bridges(
                 (screen.get_width() - board_size) // 2 + anchor_size * (target.x),
                 (screen.get_height() - board_size) // 2 + anchor_size * (target.y),
             ),
-            1000,
             is_double,
         )
         for coord, target, is_double in bridges

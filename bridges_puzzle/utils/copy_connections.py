@@ -1,4 +1,4 @@
-from ..GameState import GameState, Coordinate, Connection, Bounds
+from ..GameState import Coordinate, Connection
 
 
 def copy_connections(
