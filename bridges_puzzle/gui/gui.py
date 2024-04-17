@@ -1,11 +1,13 @@
 import pygame
 
-from .Anchor import Anchor
+from .Anchor import Anchor, DEFAULT_COLOR
 from .Bridge import Bridge
-from .Button import Button
+from .Button import Button, ButtonEvents
 from .GameObject import GameObject
 from ..utils import create_game, reset, copy_connections
 from ..GameState import Bounds, GameState, Coordinate
+
+SELECTED_COLOR = pygame.Color(190, 190, 190)
 
 
 def gui():
@@ -44,7 +46,35 @@ def gui():
     bridges = convert_to_bridges(screen, bounds, first_state, board_size)
     anchors = convert_to_anchors(screen, bounds, first_state, board_size)
 
-    game_objects = [*bridges, *anchors]
+    selected: Anchor | None = None
+
+    def select(anchor: Anchor, coords: Coordinate):
+        nonlocal selected
+
+        if selected is anchor:
+            selected.color = DEFAULT_COLOR
+            selected = None
+            print(f"deselected {coords}")
+            return
+
+        if selected is not None:
+            selected.color = DEFAULT_COLOR
+
+        selected = anchor
+        selected.color = SELECTED_COLOR
+
+        print(f"selected {coords}")
+
+    for coords, anchor in anchors.items():
+        if anchor.value is None:
+            continue
+
+        anchor.button.on(
+            ButtonEvents.CLICK,
+            lambda anchor=anchor, coords=coords: select(anchor, coords),
+        )
+
+    game_objects = [*bridges, *(anchors.values())]
 
     delta_time = 0
     time = 0
@@ -89,7 +119,7 @@ def convert_to_anchors(
     anchor_size = board_size / min_size
     anchor_radius = anchor_size * 0.4
 
-    anchors: list[Anchor] = []
+    anchors: dict[Coordinate, Anchor] = {}
     for y in range(0, bounds.top + 1):
         for x in range(0, bounds.right + 1):
             entry = next(
@@ -102,26 +132,22 @@ def convert_to_anchors(
             )
 
             if entry is None:
-                anchors.append(
-                    Anchor(
-                        (screen.get_width() - board_size) // 2 + anchor_size * x,
-                        (screen.get_height() - board_size) // 2 + anchor_size * y,
-                        anchor_radius,
-                        100 * (x + y),
-                    )
+                anchors[(x, y)] = Anchor(
+                    (screen.get_width() - board_size) // 2 + anchor_size * x,
+                    (screen.get_height() - board_size) // 2 + anchor_size * y,
+                    anchor_radius,
+                    100 * (x + y),
                 )
                 continue
 
             _, connection = entry
 
-            anchors.append(
-                Anchor(
-                    (screen.get_width() - board_size) // 2 + anchor_size * x,
-                    (screen.get_height() - board_size) // 2 + anchor_size * y,
-                    anchor_radius,
-                    100 * (x + y),
-                    connection.max_count - len(connection.connected),
-                )
+            anchors[(x, y)] = Anchor(
+                (screen.get_width() - board_size) // 2 + anchor_size * x,
+                (screen.get_height() - board_size) // 2 + anchor_size * y,
+                anchor_radius,
+                100 * (x + y),
+                connection.max_count - len(connection.connected),
             )
 
     return anchors
