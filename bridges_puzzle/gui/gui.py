@@ -2,7 +2,9 @@ import pygame
 
 from .Anchor import Anchor, DEFAULT_COLOR
 from .Bridge import Bridge
+from .Wire import Wire
 from .Button import Button, ButtonEvents
+from .QuadraticBezier import QuadraticBezier
 from .GameObject import GameObject
 from ..utils import create_game, reset, copy_connections
 from ..GameState import Bounds, GameState, Coordinate
@@ -26,6 +28,8 @@ def gui():
         Button,
         Anchor,
         Bridge,
+        Wire,
+        QuadraticBezier,
     ]
 
     for obj in OBJECTS:
@@ -39,7 +43,7 @@ def gui():
     bounds = Bounds(ncols - 1, nrows - 1, 0, 0)
     anchor_count = 7
     first_state = create_game(anchor_count, bounds, 5)
-    # first_state = reset(first_state)
+    first_state = reset(first_state)
 
     board_size = 500
 
@@ -47,6 +51,8 @@ def gui():
     anchors = convert_to_anchors(screen, bounds, first_state, board_size)
 
     selected: Anchor | None = None
+    wire = Wire(0, 0, board_size)
+    wire.active = False
 
     def select(anchor: Anchor, coords: Coordinate):
         nonlocal selected
@@ -54,6 +60,7 @@ def gui():
         if selected is anchor:
             selected.color = DEFAULT_COLOR
             selected = None
+            wire.active = False
             print(f"deselected {coords}")
             return
 
@@ -62,7 +69,9 @@ def gui():
 
         selected = anchor
         selected.color = SELECTED_COLOR
-
+        wire.active = True
+        wire.x = anchor.x
+        wire.y = anchor.y
         print(f"selected {coords}")
 
     for coords, anchor in anchors.items():
@@ -74,7 +83,7 @@ def gui():
             lambda anchor=anchor, coords=coords: select(anchor, coords),
         )
 
-    game_objects = [*bridges, *(anchors.values())]
+    game_objects: list[GameObject] = [*bridges, wire, *(anchors.values())]
 
     delta_time = 0
     time = 0
@@ -93,12 +102,10 @@ def gui():
         screen.fill("white")
 
         for game_object in game_objects:
-            game_object.update(delta_time, time)
+            game_object.engine_update(delta_time, time)
 
         for game_object in game_objects:
-            game_object.render(delta_time, time)
-
-        # RENDER YOUR GAME HERE
+            game_object.engine_render(delta_time, time)
 
         # flip() the display to put your work on screen
         pygame.display.flip()
