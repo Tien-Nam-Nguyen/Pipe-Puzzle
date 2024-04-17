@@ -6,5 +6,6 @@ from .utils import (
     reset,
     is_solved,
     generate_next_states,
+    copy,
 )
 from .gui import gui
