@@ -8,7 +8,7 @@ class Coordinate(NamedTuple):
     def __hash__(self):
         return hash((self.x, self.y))
 
-    def __eq__(self, other):
+    def __eq__(self, other: Self):
         return self.x == other.x and self.y == other.y
 
     def __str__(self):
