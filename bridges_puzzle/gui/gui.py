@@ -161,7 +161,7 @@ def convert_to_bridges(
                 (screen.get_width() - board_size) // 2 + anchor_size * (target.x),
                 (screen.get_height() - board_size) // 2 + anchor_size * (target.y),
             ),
-            500,
+            1000,
             is_double,
         )
         for coord, target, is_double in bridges
