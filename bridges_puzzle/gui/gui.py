@@ -120,7 +120,7 @@ def convert_to_anchors(
                     (screen.get_height() - board_size) // 2 + anchor_size * y,
                     anchor_radius,
                     100 * (x + y),
-                    connection.max_count,
+                    connection.max_count - len(connection.connected),
                 )
             )
 
