@@ -1,14 +1,12 @@
 from pygame import font
 from pygame.draw import rect
-from pygame.time import Clock, get_ticks
-from pygame.surface import Surface
+from pygame.time import get_ticks
 from pygame.color import Color
 from pygame.rect import Rect
 
-from tweener import Tween, Easing, EasingMode, Ease
+from tweener import Tween, Easing, EasingMode
 
 from .GameObject import GameObject
-from .Button import ButtonEvents
 from .ScaleButton import ScaleButton
 
 DEFAULT_COLOR = Color(230, 230, 230)

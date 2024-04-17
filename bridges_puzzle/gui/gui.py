@@ -5,10 +5,12 @@ from .Anchor import Anchor, DEFAULT_COLOR
 from .Bridge import Bridge
 from .Wire import Wire
 from .Button import Button, ButtonEvents
+from .ScaleButton import ScaleButton
 from .QuadraticBezier import QuadraticBezier
 from .GameObject import GameObject
 from ..utils import create_game, reset, copy_connections, connect
 from ..GameState import Bounds, GameState, Coordinate
+
 
 SELECTED_COLOR = pygame.Color(190, 190, 190)
 
@@ -32,6 +34,7 @@ def gui():
 
     OBJECTS: list[GameObject] = [
         Button,
+        ScaleButton,
         Anchor,
         Bridge,
         Wire,
@@ -51,7 +54,7 @@ def gui():
     game_state = create_game(anchor_count, bounds, 5, 0)
     game_state = reset(game_state)
 
-    board_size = 500
+    board_size = 600
 
     bridges = convert_to_bridges(screen, bounds, game_state, board_size)
     anchors = convert_to_anchors(screen, bounds, game_state, board_size)
@@ -157,7 +160,7 @@ def convert_to_anchors(
     board_size: float,
 ):
     min_size = max(bounds.right, bounds.top, 1)
-    anchor_size = board_size / min_size
+    anchor_size = board_size / (min_size + 1)
     anchor_radius = anchor_size * 0.4
 
     anchors: dict[Coordinate, Anchor] = {}
@@ -174,8 +177,12 @@ def convert_to_anchors(
 
             if entry is None:
                 anchors[Coordinate(x, y)] = Anchor(
-                    (screen.get_width() - board_size) // 2 + anchor_size * x,
-                    (screen.get_height() - board_size) // 2 + anchor_size * y,
+                    (screen.get_width() - board_size) // 2
+                    + anchor_size * x
+                    + anchor_size // 2,
+                    (screen.get_height() - board_size) // 2
+                    + anchor_size * y
+                    + anchor_size // 2,
                     anchor_radius,
                     100 * (x + y),
                 )
@@ -184,8 +191,12 @@ def convert_to_anchors(
             _, connection = entry
 
             anchors[Coordinate(x, y)] = Anchor(
-                (screen.get_width() - board_size) // 2 + anchor_size * x,
-                (screen.get_height() - board_size) // 2 + anchor_size * y,
+                (screen.get_width() - board_size) // 2
+                + anchor_size * x
+                + anchor_size // 2,
+                (screen.get_height() - board_size) // 2
+                + anchor_size * y
+                + anchor_size // 2,
                 anchor_radius,
                 100 * (x + y),
                 connection.max_count - len(connection.connected),
@@ -201,7 +212,7 @@ def convert_to_bridges(
     board_size: float,
 ):
     min_size = max(bounds.right, bounds.top, 1)
-    anchor_size = board_size / min_size
+    anchor_size = board_size / (min_size + 1)
 
     copy = copy_connections(game_state.connections)
 
@@ -221,12 +232,20 @@ def convert_to_bridges(
     bridge_objects = [
         Bridge(
             (
-                (screen.get_width() - board_size) // 2 + anchor_size * (coord.x),
-                (screen.get_height() - board_size) // 2 + anchor_size * (coord.y),
+                (screen.get_width() - board_size) // 2
+                + anchor_size * (coord.x)
+                + anchor_size // 2,
+                (screen.get_height() - board_size) // 2
+                + anchor_size * (coord.y)
+                + anchor_size // 2,
             ),
             (
-                (screen.get_width() - board_size) // 2 + anchor_size * (target.x),
-                (screen.get_height() - board_size) // 2 + anchor_size * (target.y),
+                (screen.get_width() - board_size) // 2
+                + anchor_size * (target.x)
+                + anchor_size // 2,
+                (screen.get_height() - board_size) // 2
+                + anchor_size * (target.y)
+                + anchor_size // 2,
             ),
             is_double,
         )
