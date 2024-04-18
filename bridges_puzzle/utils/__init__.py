@@ -1,3 +1,4 @@
+from .a_star import a_star
 from .add_bridge import add_bridge
 from .bfs import bfs
 from .connect import connect

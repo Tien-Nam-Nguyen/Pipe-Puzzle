@@ -69,8 +69,10 @@ def connect(
 
     if existing_connections == 1:
         new_connections = copy_connections(connections)
-        new_connections[a].connected.append(b)
-        new_connections[b].connected.append(a)
+        new_a = Coordinate(a.x, a.y)
+        new_b = Coordinate(b.x, b.y)
+        new_connections[new_a].connected.append(new_b)
+        new_connections[new_b].connected.append(new_a)
         return new_connections
 
     if a.x != b.x and a.y != b.y:
@@ -80,6 +82,8 @@ def connect(
     validate_non_intersecting_connection(connections, a, b)
 
     new_connections = copy_connections(connections)
-    new_connections[a].connected.append(b)
-    new_connections[b].connected.append(a)
+    new_a = Coordinate(a.x, a.y)
+    new_b = Coordinate(b.x, b.y)
+    new_connections[new_a].connected.append(new_b)
+    new_connections[new_b].connected.append(new_a)
     return new_connections
