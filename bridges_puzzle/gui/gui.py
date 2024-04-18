@@ -95,14 +95,13 @@ def init():
     return screen, clock
 
 
-def gui():
+def gui(
+    difficulty: GameDifficulty = GameDifficulty.EASY, size: BoardSize = BoardSize.SMALL
+):
     screen, clock = init()
 
-    game_difficulty = GameDifficulty.EASY
-    game_size = BoardSize.SMALL
-
     start_state, _solution, _bounds, _anchor_count = generate_base_game(
-        game_difficulty, game_size
+        difficulty, size
     )
 
     game_state = start_state

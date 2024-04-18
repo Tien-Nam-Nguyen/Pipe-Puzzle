@@ -1,4 +1,4 @@
-from .gui import gui
+from .gui import gui, GameDifficulty, BoardSize
 from .Anchor import Anchor
 from .Bridge import Bridge
 from .Button import Button

@@ -11,4 +11,4 @@ from .utils import (
     generate_next_states,
     copy,
 )
-from .gui import gui
+from .gui import gui, GameDifficulty, BoardSize
