@@ -1,5 +1,7 @@
 from .GameState import GameState, Bounds, Connection, Coordinate
 from .utils import (
+    bfs,
+    dfs,
     stringify,
     create_game,
     add_bridge,
