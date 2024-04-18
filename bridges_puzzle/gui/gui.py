@@ -48,11 +48,11 @@ def generate_anchor_count(
 
     match difficulty:
         case GameDifficulty.EASY:
-            return randint(4, 10)
+            return randint(4, 8)
         case GameDifficulty.MEDIUM:
-            return randint(11, 20)
+            return randint(9, 15)
         case GameDifficulty.HARD:
-            return randint(21, 30)
+            return randint(16, 20)
 
     return 4
 
