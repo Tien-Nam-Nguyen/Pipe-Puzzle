@@ -21,7 +21,7 @@ class Bridge(GameObject):
         self.start_node = start
         self.end_node = end
         self.double = double
-        self.anim_thickness = Tween(0, 5, 500, Easing.EXPO, EasingMode.IN_OUT)
+        self.anim_thickness = Tween(5, 5, 500, Easing.EXPO, EasingMode.IN_OUT)
 
     def start(self):
         self.anim_thickness.start()

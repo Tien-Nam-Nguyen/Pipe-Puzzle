@@ -11,7 +11,7 @@ from .ScaleButton import ScaleButton
 from .LabelButton import LabelButton
 from .QuadraticBezier import QuadraticBezier
 from .GameObject import GameObject
-from ..utils import create_game, reset, copy_connections, connect
+from ..utils import create_game, reset, copy_connections, connect, dfs, a_star
 from ..GameState import Bounds, GameState, Coordinate, Connection
 
 GAME_OBJECTS: list[GameObject] = [
@@ -98,8 +98,6 @@ def init():
 def gui():
     screen, clock = init()
 
-    [input_mode_data] = create_ui()
-
     game_difficulty = GameDifficulty.EASY
     game_size = BoardSize.SMALL
 
@@ -137,10 +135,19 @@ def gui():
         set_game_state,
     )
 
+    input_mode_data, dfs_button, a_star_button = create_ui(
+        anchors,
+        get_game_state,
+        update_bridges_objects,
+        set_game_state,
+    )
+
     static_objects: list[GameObject] = [
         wire,
         *(anchors.values()),
         input_mode_data.button,
+        dfs_button,
+        a_star_button,
     ]
 
     game_objects: list[GameObject] = [*bridges, *static_objects]
@@ -395,12 +402,42 @@ def create_selector(
 INPUT_MODE_BUTTON_POSITION = (100, 60)
 
 
-def create_ui():
+def create_ui(
+    anchors: dict[Coordinate, Anchor],
+    get_game_state: Callable[[], GameState],
+    update_bridges_objects: Callable[[list[Bridge]], None],
+    set_game_state: Callable[[GameState], None],
+):
     input_mode_options = create_input_mode_button()
 
-    return [
-        input_mode_options,
-    ]
+    dfs_solve = create_dfs_solver()
+    a_star_solve = create_a_star_solver()
+
+    dfs_solve_button = create_solver_button(
+        100,
+        140,
+        "DFS",
+        pygame.Color(240, 240, 160),
+        dfs_solve,
+        anchors,
+        get_game_state,
+        set_game_state,
+        update_bridges_objects,
+    )
+
+    a_star_solve_button = create_solver_button(
+        100,
+        220,
+        "A*",
+        pygame.Color(200, 200, 250),
+        a_star_solve,
+        anchors,
+        get_game_state,
+        set_game_state,
+        update_bridges_objects,
+    )
+
+    return input_mode_options, dfs_solve_button, a_star_solve_button
 
 
 class InputModeButton:
@@ -440,3 +477,89 @@ def create_input_mode_button():
 
 def calc_anchor_value(coords: Coordinate, connections: dict[Coordinate, Connection]):
     return connections[coords].max_count - len(connections[coords].connected)
+
+
+def create_dfs_solver():
+    cache: dict[GameState, tuple[Coordinate, Coordinate]] = {}
+
+    def dfs_solve(game_state: GameState):
+        if game_state in cache:
+            return cache[game_state]
+
+        try:
+            solution = dfs(game_state)
+
+            curr_state = game_state
+            for next_state, move in zip(solution.states, solution.moves):
+                cache[curr_state] = move
+                curr_state = next_state
+
+            # Solved state
+            cache[solution.states[-1]] = None
+
+            return cache[game_state]
+        except Exception as e:
+            print(e)
+            return None
+
+    return dfs_solve
+
+
+def create_a_star_solver():
+    cache: dict[GameState, tuple[Coordinate, Coordinate]] = {}
+
+    def a_star_solve(game_state: GameState):
+        if game_state in cache:
+            return cache[game_state]
+
+        try:
+            solution = a_star(game_state)
+
+            prev_state = game_state
+            for state, move in zip(solution.states, solution.moves):
+                cache[prev_state] = move
+                prev_state = state
+
+            return cache[game_state]
+        except Exception as e:
+            print(e)
+            return None
+
+    return a_star_solve
+
+
+def create_solver_button(
+    x: float,
+    y: float,
+    label: str,
+    color: pygame.Color,
+    solve: Callable[[GameState], tuple[Coordinate, Coordinate] | None],
+    anchors: dict[Coordinate, Anchor],
+    get_game_state: Callable[[], GameState],
+    set_game_state: Callable[[GameState], None],
+    update_bridges_objects: Callable[[list[Bridge]], None],
+):
+    def solve_dfs():
+        game_state = get_game_state()
+        move = solve(game_state)
+
+        if move is None:
+            return
+
+        connections = connect(game_state.connections, move[0], move[1])
+        new_game_state = GameState(connections, game_state.bounds)
+
+        bridges = convert_to_bridges(new_game_state)
+        anchors[move[0]].value = calc_anchor_value(move[0], new_game_state.connections)
+        anchors[move[1]].value = calc_anchor_value(move[1], new_game_state.connections)
+
+        set_game_state(new_game_state)
+        update_bridges_objects(bridges)
+
+    button = LabelButton(x, y, label, color)
+    button.button.on(ButtonEvents.CLICK, solve_dfs)
+    return button
+
+
+def create_reset_button():
+    pass
