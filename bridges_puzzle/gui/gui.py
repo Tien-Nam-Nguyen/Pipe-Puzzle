@@ -84,6 +84,7 @@ def init():
         raise ImportError("pygame.mixer not available")
 
     pygame.init()
+    pygame.display.set_caption("Bridges Puzzle")
 
     screen = pygame.display.set_mode(SCREEN_SIZE)
     clock = pygame.time.Clock()
@@ -102,9 +103,11 @@ def gui():
     game_difficulty = GameDifficulty.EASY
     game_size = BoardSize.SMALL
 
-    game_state, _solution, _bounds, _anchor_count = generate_base_game(
+    start_state, _solution, _bounds, _anchor_count = generate_base_game(
         game_difficulty, game_size
     )
+
+    game_state = start_state
 
     bridges, anchors = generate_game_objects(game_state)
 
