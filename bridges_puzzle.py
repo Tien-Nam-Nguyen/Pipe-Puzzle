@@ -1,3 +1,3 @@
 from bridges_puzzle import gui, GameDifficulty, BoardSize
 
-gui(GameDifficulty.MEDIUM, BoardSize.MEDIUM)
+gui(GameDifficulty.EASY, BoardSize.MEDIUM)

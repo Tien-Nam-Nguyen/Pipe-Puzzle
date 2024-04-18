@@ -61,13 +61,13 @@ def generate_base_game(
     difficulty: GameDifficulty,
     size: BoardSize,
     seed_value: int | float | str | bytes | bytearray | None = None,
-) -> tuple[GameState, GameState, Bounds, int]:
+) -> tuple[GameState, GameState]:
     bounds = Bounds(size.value - 1, size.value - 1, 0, 0)
     anchor_count = generate_anchor_count(difficulty, seed_value)
     solution = create_game(anchor_count, bounds, difficulty.value, seed_value)
     game_state = reset(solution)
 
-    return game_state, solution, bounds, anchor_count
+    return game_state, solution
 
 
 def generate_game_objects(game_state: GameState):
@@ -96,13 +96,13 @@ def init():
 
 
 def gui(
-    difficulty: GameDifficulty = GameDifficulty.EASY, size: BoardSize = BoardSize.SMALL
+    difficulty: GameDifficulty = GameDifficulty.EASY,
+    size: BoardSize = BoardSize.SMALL,
+    seed_value: int | float | str | bytes | bytearray | None = None,
 ):
     screen, clock = init()
 
-    start_state, _solution, _bounds, _anchor_count = generate_base_game(
-        difficulty, size
-    )
+    start_state, solution = generate_base_game(difficulty, size, seed_value)
 
     game_state = start_state
 
@@ -134,11 +134,14 @@ def gui(
         set_game_state,
     )
 
-    input_mode_data, dfs_button, a_star_button = create_ui(
-        anchors,
-        get_game_state,
-        update_bridges_objects,
-        set_game_state,
+    input_mode_data, dfs_button, a_star_button, reset_button, show_solution_button = (
+        create_ui(
+            anchors,
+            solution,
+            get_game_state,
+            update_bridges_objects,
+            set_game_state,
+        )
     )
 
     static_objects: list[GameObject] = [
@@ -147,6 +150,8 @@ def gui(
         input_mode_data.button,
         dfs_button,
         a_star_button,
+        reset_button,
+        show_solution_button,
     ]
 
     game_objects: list[GameObject] = [*bridges, *static_objects]
@@ -403,6 +408,7 @@ INPUT_MODE_BUTTON_POSITION = (100, 60)
 
 def create_ui(
     anchors: dict[Coordinate, Anchor],
+    solution: GameState,
     get_game_state: Callable[[], GameState],
     update_bridges_objects: Callable[[list[Bridge]], None],
     set_game_state: Callable[[GameState], None],
@@ -436,7 +442,21 @@ def create_ui(
         update_bridges_objects,
     )
 
-    return input_mode_options, dfs_solve_button, a_star_solve_button
+    reset_button = create_reset_button(
+        anchors, get_game_state, set_game_state, update_bridges_objects
+    )
+
+    show_solution_button = create_show_solution_button(
+        anchors, solution, set_game_state, update_bridges_objects
+    )
+
+    return (
+        input_mode_options,
+        dfs_solve_button,
+        a_star_solve_button,
+        reset_button,
+        show_solution_button,
+    )
 
 
 class InputModeButton:
@@ -560,5 +580,44 @@ def create_solver_button(
     return button
 
 
-def create_reset_button():
-    pass
+def create_reset_button(
+    anchors: dict[Coordinate, Anchor],
+    get_game_state: Callable[[], GameState],
+    set_game_state: Callable[[GameState], None],
+    update_bridges_objects: Callable[[list[Bridge]], None],
+):
+    def reset_game():
+        game_state = get_game_state()
+        new_game_state = reset(game_state)
+
+        bridges = convert_to_bridges(new_game_state)
+        for coords, anchor in anchors.items():
+            if coords in new_game_state.connections:
+                anchor.value = game_state.connections[coords].max_count
+
+        set_game_state(new_game_state)
+        update_bridges_objects(bridges)
+
+    button = LabelButton(100, 590, "Reset", pygame.Color(240, 200, 200))
+    button.button.on(ButtonEvents.CLICK, reset_game)
+    return button
+
+
+def create_show_solution_button(
+    anchors: dict[Coordinate, Anchor],
+    solution: GameState,
+    set_game_state: Callable[[GameState], None],
+    update_bridges_objects: Callable[[list[Bridge]], None],
+):
+    def show_solution():
+        bridges = convert_to_bridges(solution)
+        for coords, anchor in anchors.items():
+            if coords in solution.connections:
+                anchor.value = 0
+
+        set_game_state(solution)
+        update_bridges_objects(bridges)
+
+    button = LabelButton(100, 670, "Solution", pygame.Color(200, 240, 200))
+    button.button.on(ButtonEvents.CLICK, show_solution)
+    return button
