@@ -61,7 +61,7 @@ def draw_3x3_new_game_button():
     font = pygame.font.SysFont('Georgia', 18, bold=True)
 
     # Vẽ nút "New Game 3x3"
-    button_3x3 = pygame.Rect(SCREEN_WIDTH - 200, 50, 135, 30)
+    button_3x3 = pygame.Rect(SCREEN_WIDTH - 220, 50, 160, 30)
     pygame.draw.rect(screen, BLUE, button_3x3)
     text_3x3 = font.render("New Game 3x3", True, WHITE)
     screen.blit(text_3x3, (button_3x3.x + 10, button_3x3.y + 5))
@@ -75,13 +75,13 @@ def draw_new_game_buttons():
     font = pygame.font.SysFont('Georgia', 18, bold=True)
     
     # Vẽ nút "New Game 4x4"
-    button_4x4 = pygame.Rect(SCREEN_WIDTH - 200, 110, 135, 30)
+    button_4x4 = pygame.Rect(SCREEN_WIDTH - 220, 110, 160, 30)
     pygame.draw.rect(screen, BLUE, button_4x4)
     text_4x4 = font.render("New Game 4x4", True, WHITE)
     screen.blit(text_4x4, (button_4x4.x + 10, button_4x4.y + 5))
 
     # Vẽ nút "New Game 5x5"
-    button_5x5 = pygame.Rect(SCREEN_WIDTH - 200, 170, 135, 30)
+    button_5x5 = pygame.Rect(SCREEN_WIDTH - 220, 170, 160, 30)
     pygame.draw.rect(screen, BLUE, button_5x5)
     text_5x5 = font.render("New Game 5x5", True, WHITE)
     screen.blit(text_5x5, (button_5x5.x + 10, button_5x5.y + 5))
@@ -91,7 +91,7 @@ def draw_new_game_buttons():
 
 def draw_a_star_solve_button():
     font = pygame.font.SysFont('Georgia', 18, bold=True)
-    button_solve = pygame.Rect(SCREEN_WIDTH - 200, 230, 135, 30)
+    button_solve = pygame.Rect(SCREEN_WIDTH - 220, 230, 160, 30)
     pygame.draw.rect(screen, GREEN, button_solve)
     text_solve = font.render("A* Solve", True, WHITE)
     screen.blit(text_solve, (button_solve.x + 10, button_solve.y + 5))
@@ -100,7 +100,7 @@ def draw_a_star_solve_button():
 
 def draw_dfs_solve_button():
     font = pygame.font.SysFont('Georgia', 18, bold=True)
-    button_solve = pygame.Rect(SCREEN_WIDTH - 200, 290, 135, 30)
+    button_solve = pygame.Rect(SCREEN_WIDTH - 220, 290, 160, 30)
     pygame.draw.rect(screen, GREEN, button_solve)
     text_solve = font.render("DFS Solve", True, WHITE)
     screen.blit(text_solve, (button_solve.x + 10, button_solve.y + 5))
